@@ -4,6 +4,9 @@
    Usage: <?= t('nav_system') ?>
    ───────────────────────────────────────────────────────────── */
 
+/* Base path for subfolder deployment (e.g. /techsallus). Empty = root. */
+define('BASE', rtrim(getenv('BASE_PATH') ?: '', '/'));
+
 $SUPPORTED_LANGS = ['pt', 'en', 'es'];
 
 function detectLang(): string {

@@ -2,7 +2,20 @@
 /* ─────────────────────────────────────────────────────────────
    TechSallus Blog — listagem de artigos
    ───────────────────────────────────────────────────────────── */
-require_once __DIR__ . '/../../config/i18n.php';
+$_cfg = file_exists(__DIR__ . '/../../config/i18n.php')
+    ? __DIR__ . '/../../config/i18n.php'
+    : __DIR__ . '/../config/i18n.php';
+require_once $_cfg;
+if (BASE !== '') {
+    $__b = BASE;
+    ob_start(function ($h) use ($__b) {
+        return str_replace(
+            ['href="/', 'src="/', "href='/", "src='/"],
+            ['href="'.$__b.'/', 'src="'.$__b.'/', "href='".$__b."/", "src='".$__b."/"],
+            $h
+        );
+    });
+}
 
 $ARTICLES = [
   [

@@ -1,4 +1,22 @@
-<?php require_once __DIR__ . '/../config/i18n.php'; ?>
+<?php
+/* Auto-detect config path: dev (public/../config) vs prod flat (techsallus/config) */
+$_cfg = file_exists(__DIR__ . '/../config/i18n.php')
+    ? __DIR__ . '/../config/i18n.php'
+    : __DIR__ . '/config/i18n.php';
+require_once $_cfg;
+
+/* Prefix all absolute href/src with BASE when running in a subfolder */
+if (BASE !== '') {
+    $__b = BASE;
+    ob_start(function ($h) use ($__b) {
+        return str_replace(
+            ['href="/', 'src="/', "href='/", "src='/"],
+            ['href="'.$__b.'/', 'src="'.$__b.'/', "href='".$__b."/", "src='".$__b."/"],
+            $h
+        );
+    });
+}
+?>
 <!DOCTYPE html>
 <html lang="<?= $LANG ?>">
 <head>
