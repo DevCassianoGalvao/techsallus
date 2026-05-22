@@ -1,0 +1,24 @@
+# TechSallus — Apache rules
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Block direct access to sensitive directories
+  RewriteRule ^core/     - [F,L]
+  RewriteRule ^config/   - [F,L]
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Security headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Block access to .env and config files
+<FilesMatch "^(\.env|config\.php|composer\.(json|lock))$">
+  Require all denied
+</FilesMatch>

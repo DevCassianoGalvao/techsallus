@@ -1,0 +1,12 @@
+/* TechSallus — admin.css (stub) */
+body.admin-body { background: #f5f8fc; font-family: 'DM Sans', sans-serif; }
+.admin-layout { display: flex; min-height: 100vh; }
+.admin-sidebar { width: 240px; background: #0d1f35; flex-shrink: 0; padding: 24px 0; }
+.admin-sidebar-logo { height: 28px; filter: brightness(0) invert(1); margin: 0 24px 32px; }
+.admin-nav { display: flex; flex-direction: column; }
+.admin-nav a { padding: 12px 24px; font-size: 14px; color: rgba(255,255,255,0.6); transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+.admin-nav a:hover, .admin-nav a.active { background: rgba(255,255,255,0.06); color: #fff; }
+.admin-main { flex: 1; padding: 40px; }
+.admin-header { margin-bottom: 32px; }
+.admin-header h1 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 700; color: #0d1f35; }
+.admin-card { background: #fff; border: 1px solid #e2eaf3; border-radius: 12px; padding: 24px; }
