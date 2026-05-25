@@ -1,4 +1,8 @@
 <?php
+/* ─────────────────────────────────────────────────────────────
+   api/leads.php — Captura de leads do formulário de demonstração
+   POST FormData → valida → honeypot → rate limit → DB → Brevo
+   ───────────────────────────────────────────────────────────── */
 
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
@@ -15,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+/* ── Campos principais ──────────────────────────────────────── */
 $nome        = trim(strip_tags($_POST['nome']        ?? ''));
 $instituicao = trim(strip_tags($_POST['instituicao'] ?? ''));
 $cargo       = trim(strip_tags($_POST['cargo']       ?? ''));
@@ -22,6 +27,7 @@ $email       = trim($_POST['email']                  ?? '');
 $whatsapp    = trim(strip_tags($_POST['whatsapp']    ?? ''));
 $porte       = trim(strip_tags($_POST['porte']       ?? ''));
 
+/* ── Validação ──────────────────────────────────────────────── */
 $erros = [];
 if (empty($nome))        $erros[] = 'Nome obrigatório';
 if (empty($instituicao)) $erros[] = 'Instituição obrigatória';
@@ -36,11 +42,50 @@ if (!empty($erros)) {
     exit;
 }
 
+/* ── Honeypot — bots preenchem o campo "website", humanos não ── */
+if (!empty($_POST['website'])) {
+    echo json_encode(['ok' => true]); // fingir sucesso
+    exit;
+}
+
+/* ── Rate limit por IP — máximo 3 submissões/hora ───────────── */
+$ip       = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$ipHash   = hash('sha256', $ip);
+$cacheDir = sys_get_temp_dir() . '/techsallus_rl/';
+
+if (!is_dir($cacheDir)) {
+    mkdir($cacheDir, 0700, true);
+}
+
+$cacheFile = $cacheDir . $ipHash . '.json';
+$limite    = 3;
+$janela    = 3600;
+$agora     = time();
+
+$dados = file_exists($cacheFile)
+    ? (json_decode(file_get_contents($cacheFile), true) ?: ['count' => 0, 'first' => $agora])
+    : ['count' => 0, 'first' => $agora];
+
+if ($agora - $dados['first'] > $janela) {
+    $dados = ['count' => 0, 'first' => $agora];
+}
+
+if ($dados['count'] >= $limite) {
+    http_response_code(429);
+    echo json_encode(['ok' => false, 'erro' => 'Muitas tentativas. Tente novamente em alguns minutos.']);
+    exit;
+}
+
+$dados['count']++;
+file_put_contents($cacheFile, json_encode($dados), LOCK_EX);
+
+/* ── UTM params ─────────────────────────────────────────────── */
 $utm_source   = trim(strip_tags($_POST['utm_source']   ?? ''));
 $utm_medium   = trim(strip_tags($_POST['utm_medium']   ?? ''));
 $utm_campaign = trim(strip_tags($_POST['utm_campaign'] ?? ''));
 $ip_origem    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
 
+/* ── Inserir no banco ───────────────────────────────────────── */
 try {
     $leadId = DB::insert(
         "INSERT INTO leads (nome, instituicao, cargo, email, whatsapp, porte, utm_source, utm_medium, utm_campaign, ip_origem)
@@ -58,6 +103,7 @@ try {
     echo json_encode(['ok' => false, 'erro' => 'Erro interno. Tente novamente.']);
 }
 
+/* ── Notificação Brevo ──────────────────────────────────────── */
 function notificarBrevo(string $nome, string $inst, string $cargo, string $email, string $whatsapp, string $porte): void
 {
     $apiKey    = Env::get('BREVO_API_KEY');

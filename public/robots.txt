@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /blog/
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /core/
+Disallow: /config/
+Disallow: /assets/uploads/
+
+Sitemap: https://techsallus.com.br/sitemap.xml

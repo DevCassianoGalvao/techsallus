@@ -42,6 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
         $results[] = ['ok', 'Tabela usuarios criada'];
 
+        /* Adicionar colunas de recuperação de senha (idempotente) */
+        foreach (['reset_token VARCHAR(64) DEFAULT NULL', 'reset_expires_at DATETIME DEFAULT NULL'] as $col) {
+            $colName = explode(' ', $col)[0];
+            $exists  = $pdo->query("SHOW COLUMNS FROM `usuarios` LIKE '{$colName}'")->rowCount();
+            if (!$exists) {
+                $pdo->exec("ALTER TABLE `usuarios` ADD COLUMN {$col}");
+            }
+        }
+        $results[] = ['ok', 'Colunas reset_token / reset_expires_at verificadas'];
+
         $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
         $stmt->execute(['admin@techsallus.com.br']);
         if (!$stmt->fetch()) {

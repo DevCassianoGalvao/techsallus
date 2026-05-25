@@ -86,6 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" class="btn-submit">Entrar</button>
     </form>
 
+    <a href="/admin/esqueci-senha.php" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:#4a6080;text-decoration:none">
+      Esqueci minha senha
+    </a>
+
     <a href="/" class="admin-login-back">← Voltar ao site</a>
   </div>
 </body>

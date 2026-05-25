@@ -1,24 +1,68 @@
-# TechSallus — Apache rules
+# TechSallus — Apache configuration
+# Segurança + Roteamento + Cache + Compressão
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Block direct access to sensitive directories
-  RewriteRule ^core/     - [F,L]
-  RewriteRule ^config/   - [F,L]
+  # ── HTTPS redirect (ativo apenas em produção) ───────────────
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # ── Remover www ─────────────────────────────────────────────
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # ── Sitemap dinâmico ────────────────────────────────────────
+  RewriteRule ^sitemap\.xml$ /sitemap.php [L]
+
+  # ── Roteamento do blog: /blog/meu-slug → artigo.php ─────────
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^blog/([a-z0-9-]+)/?$ /blog/artigo.php?slug=$1 [L,QSA]
+
+  # ── Bloquear acesso a pastas sensíveis ──────────────────────
+  RewriteRule ^(core|config)/ - [F,L]
 </IfModule>
 
-# Prevent directory listing
+# Prevenir listagem de diretórios
 Options -Indexes
 
-# Security headers
+# ── Página 404 personalizada ────────────────────────────────
+ErrorDocument 404 /404.php
+
+# ── Headers de segurança ────────────────────────────────────
 <IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header set X-Frame-Options "SAMEORIGIN"
-  Header set X-XSS-Protection "1; mode=block"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
 </IfModule>
 
-# Block access to .env and config files
-<FilesMatch "^(\.env|config\.php|composer\.(json|lock))$">
+# ── Cache de assets estáticos ───────────────────────────────
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp            "access plus 1 year"
+  ExpiresByType image/jpeg            "access plus 1 year"
+  ExpiresByType image/png             "access plus 1 year"
+  ExpiresByType image/svg+xml         "access plus 1 month"
+  ExpiresByType text/css              "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/json      "access plus 0 seconds"
+</IfModule>
+
+# ── Compressão gzip ─────────────────────────────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json text/xml
+</IfModule>
+
+# ── Bloquear acesso a arquivos sensíveis ────────────────────
+<FilesMatch "\.(env|log|sql|md|gitignore)$">
   Require all denied
 </FilesMatch>
+
+# Bloquear acesso ao painel de install após uso
+<Files "install.php">
+  # Remova este comentário e descomente abaixo após instalar em produção:
+  # Require all denied
+</Files>

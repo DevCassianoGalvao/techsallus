@@ -654,6 +654,10 @@ if (BASE !== '') {
           <input type="hidden" name="utm_source"   id="utm_source">
           <input type="hidden" name="utm_medium"   id="utm_medium">
           <input type="hidden" name="utm_campaign" id="utm_campaign">
+          <!-- Honeypot — invisível para humanos, bots preenchem -->
+          <div style="display:none!important;visibility:hidden;position:absolute;left:-9999px" aria-hidden="true">
+            <input type="text" name="website" tabindex="-1" autocomplete="off">
+          </div>
           <button type="submit" class="btn-submit">Quero ver uma demonstração gratuita</button>
         </form>
       </div>
