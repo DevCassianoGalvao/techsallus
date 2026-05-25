@@ -1,2 +1,222 @@
-/* TechSallus — admin.js (stub) */
-console.log('Admin JS loaded');
+/* ─────────────────────────────────────────────────────────────
+   TechSallus — admin.js
+   Kanban (SortableJS) · Lead modal · Notes AJAX
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  function postJSON(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(function (r) { return r.json(); });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     MODAL
+     ═══════════════════════════════════════════════════════════ */
+  var modalOverlay   = document.getElementById('lead-modal');
+  var modalClose     = document.getElementById('modal-close');
+  var currentLeadId  = null;
+
+  function openModal(cardEl) {
+    if (!modalOverlay) return;
+    currentLeadId = cardEl.dataset.id;
+
+    /* Fill detail fields */
+    setText('modal-title-text', cardEl.dataset.nome);
+    setText('modal-sub-text',   cardEl.dataset.inst);
+    setText('modal-cargo',      cardEl.dataset.cargo);
+    setText('modal-porte',      cardEl.dataset.porte);
+    setText('modal-email',      cardEl.dataset.email);
+    setText('modal-whatsapp',   cardEl.dataset.wa);
+    setText('modal-status',     cardEl.dataset.status);
+    setText('modal-data',       cardEl.dataset.data);
+
+    var utmRow = document.getElementById('modal-utm-row');
+    var utm    = cardEl.dataset.utm || '';
+    if (utmRow) {
+      utmRow.style.display = utm ? '' : 'none';
+      setText('modal-utm', utm);
+    }
+
+    /* Reset to detalhes tab, clear notes */
+    switchTab('detalhes');
+    var notesList = document.getElementById('notes-list');
+    if (notesList) notesList.innerHTML = '';
+
+    modalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    if (!modalOverlay) return;
+    modalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    currentLeadId = null;
+  }
+
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value || '—';
+  }
+
+  /* Close triggers */
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function (e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+  }
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ── Tabs ─────────────────────────────────────────────────── */
+  function switchTab(name) {
+    document.querySelectorAll('.modal-tab').forEach(function (t) {
+      t.classList.toggle('active', t.dataset.tab === name);
+    });
+    document.querySelectorAll('.modal-tab-pane').forEach(function (p) {
+      p.classList.toggle('active', p.dataset.tab === name);
+    });
+  }
+
+  document.querySelectorAll('.modal-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var name = this.dataset.tab;
+      switchTab(name);
+      if (name === 'notas' && currentLeadId) loadNotas(currentLeadId);
+    });
+  });
+
+  /* ── "Ver detalhes" button → open modal ─────────────────── */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.kanban-card-btn');
+    if (btn) {
+      var card = btn.closest('.kanban-card');
+      if (card) openModal(card);
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     NOTES
+     ═══════════════════════════════════════════════════════════ */
+  function loadNotas(leadId) {
+    var list = document.getElementById('notes-list');
+    if (!list) return;
+    list.innerHTML = '<p style="color:#4a6080;font-size:13px">Carregando…</p>';
+
+    postJSON('/api/crm.php', { action: 'notas', lead_id: parseInt(leadId, 10) })
+      .then(function (data) {
+        if (!data.ok) throw new Error(data.erro || 'Erro');
+        if (!data.notas || data.notas.length === 0) {
+          list.innerHTML = '<p style="color:#4a6080;font-size:13px">Nenhuma nota ainda.</p>';
+          return;
+        }
+        list.innerHTML = data.notas.map(function (n) {
+          return (
+            '<div class="note-item">' +
+              '<div class="note-header">' +
+                '<span class="note-author">' + escHtml(n.usuario_nome) + '</span>' +
+                '<span class="note-date">' + escHtml(n.criado_em) + '</span>' +
+              '</div>' +
+              '<div class="note-text">' + escHtml(n.nota) + '</div>' +
+            '</div>'
+          );
+        }).join('');
+      })
+      .catch(function () {
+        if (list) list.innerHTML = '<p style="color:#dc2626;font-size:13px">Erro ao carregar notas.</p>';
+      });
+  }
+
+  var noteForm  = document.getElementById('note-form');
+  var noteInput = document.getElementById('note-input');
+
+  if (noteForm) {
+    noteForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = noteInput ? noteInput.value.trim() : '';
+      if (!text || !currentLeadId) return;
+
+      var btn = noteForm.querySelector('.note-submit');
+      if (btn) btn.disabled = true;
+
+      postJSON('/api/crm.php', {
+        action:  'adicionar_nota',
+        lead_id: parseInt(currentLeadId, 10),
+        nota:    text,
+      })
+        .then(function (data) {
+          if (data.ok) {
+            if (noteInput) noteInput.value = '';
+            loadNotas(currentLeadId);
+          } else {
+            alert('Erro ao salvar nota: ' + (data.erro || ''));
+          }
+        })
+        .catch(function () {
+          alert('Erro de conexão. Tente novamente.');
+        })
+        .finally(function () {
+          if (btn) btn.disabled = false;
+        });
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     KANBAN — SortableJS drag-drop
+     ═══════════════════════════════════════════════════════════ */
+  function updateColCounts() {
+    document.querySelectorAll('.kanban-col').forEach(function (col) {
+      var count  = col.querySelectorAll('.kanban-card').length;
+      var badge  = col.querySelector('.col-count');
+      var empty  = col.querySelector('.kanban-empty');
+      if (badge) badge.textContent = count;
+      if (empty) empty.style.display = count > 0 ? 'none' : '';
+    });
+  }
+
+  if (typeof Sortable !== 'undefined') {
+    document.querySelectorAll('.kanban-col-body').forEach(function (colBody) {
+      Sortable.create(colBody, {
+        group:      'leads',
+        animation:  150,
+        ghostClass: 'kanban-ghost',
+        chosenClass:'kanban-chosen',
+        dragClass:  'kanban-drag',
+
+        onEnd: function (evt) {
+          var leadId    = evt.item.dataset.id;
+          var newStatus = evt.to.closest('.kanban-col').dataset.status;
+
+          updateColCounts();
+
+          postJSON('/api/crm.php', {
+            action: 'mover',
+            id:     parseInt(leadId, 10),
+            status: newStatus,
+          }).catch(function () {
+            /* Revert on network failure */
+            var oldIdx = evt.oldIndex;
+            var ref    = evt.from.children[oldIdx] || null;
+            evt.from.insertBefore(evt.item, ref);
+            updateColCounts();
+          });
+        },
+      });
+    });
+
+    updateColCounts();
+  }
+
+})();
