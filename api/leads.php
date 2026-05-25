@@ -1,45 +1,104 @@
 <?php
-/* ─────────────────────────────────────────────────────────────
-   POST /api/leads.php — Recebe lead do formulário e salva no DB
-   ───────────────────────────────────────────────────────────── */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? ''));
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
+header('X-Content-Type-Options: nosniff');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit; }
+$rootDir = dirname(__DIR__);
+require_once $rootDir . '/core/Env.php';
+require_once $rootDir . '/core/DB.php';
 
-require_once __DIR__ . '/../core/DB.php';
+Env::load($rootDir . '/.env');
 
-$body = json_decode(file_get_contents('php://input'), true);
-
-$nome        = trim($body['nome']        ?? '');
-$instituicao = trim($body['instituicao'] ?? '');
-$cargo       = trim($body['cargo']       ?? '');
-$email       = trim($body['email']       ?? '');
-$whatsapp    = trim($body['whatsapp']    ?? '');
-$prof        = trim($body['prof']        ?? '');
-
-$errors = [];
-if (!$nome)                         $errors[] = 'nome obrigatório';
-if (!$instituicao)                  $errors[] = 'instituição obrigatória';
-if (!$cargo)                        $errors[] = 'cargo obrigatório';
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'e-mail inválido';
-if (!$whatsapp)                     $errors[] = 'whatsapp obrigatório';
-if (!$prof)                         $errors[] = 'profissionais obrigatório';
-
-if ($errors) {
-    http_response_code(422);
-    echo json_encode(['errors' => $errors]);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok' => false, 'erro' => 'Método não permitido']);
     exit;
 }
 
-// TODO: inserir no banco de dados
-// $db  = DB::get();
-// $sql = 'INSERT INTO leads (nome, instituicao, cargo, email, whatsapp, profissionais, criado_em) VALUES (?,?,?,?,?,?,NOW())';
-// $db->prepare($sql)->execute([$nome, $instituicao, $cargo, $email, $whatsapp, $prof]);
+$nome        = trim(strip_tags($_POST['nome']        ?? ''));
+$instituicao = trim(strip_tags($_POST['instituicao'] ?? ''));
+$cargo       = trim(strip_tags($_POST['cargo']       ?? ''));
+$email       = trim($_POST['email']                  ?? '');
+$whatsapp    = trim(strip_tags($_POST['whatsapp']    ?? ''));
+$porte       = trim(strip_tags($_POST['porte']       ?? ''));
 
-http_response_code(201);
-echo json_encode(['ok' => true, 'message' => 'Lead recebido com sucesso.']);
+$erros = [];
+if (empty($nome))        $erros[] = 'Nome obrigatório';
+if (empty($instituicao)) $erros[] = 'Instituição obrigatória';
+if (empty($cargo))       $erros[] = 'Cargo obrigatório';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $erros[] = 'E-mail inválido';
+if (empty($whatsapp))    $erros[] = 'WhatsApp obrigatório';
+if (empty($porte))       $erros[] = 'Porte obrigatório';
+
+if (!empty($erros)) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'erros' => $erros]);
+    exit;
+}
+
+$utm_source   = trim(strip_tags($_POST['utm_source']   ?? ''));
+$utm_medium   = trim(strip_tags($_POST['utm_medium']   ?? ''));
+$utm_campaign = trim(strip_tags($_POST['utm_campaign'] ?? ''));
+$ip_origem    = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+
+try {
+    $leadId = DB::insert(
+        "INSERT INTO leads (nome, instituicao, cargo, email, whatsapp, porte, utm_source, utm_medium, utm_campaign, ip_origem)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [$nome, $instituicao, $cargo, $email, $whatsapp, $porte, $utm_source, $utm_medium, $utm_campaign, $ip_origem]
+    );
+
+    notificarBrevo($nome, $instituicao, $cargo, $email, $whatsapp, $porte);
+
+    echo json_encode(['ok' => true, 'id' => $leadId]);
+
+} catch (Exception $e) {
+    error_log('Erro ao salvar lead: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'erro' => 'Erro interno. Tente novamente.']);
+}
+
+function notificarBrevo(string $nome, string $inst, string $cargo, string $email, string $whatsapp, string $porte): void
+{
+    $apiKey    = Env::get('BREVO_API_KEY');
+    $fromEmail = Env::get('BREVO_FROM_EMAIL');
+    $fromName  = Env::get('BREVO_FROM_NAME');
+    $toEmail   = Env::get('BREVO_TO_EMAIL');
+
+    if (empty($apiKey) || empty($toEmail)) return;
+
+    $body = json_encode([
+        'sender'      => ['name' => $fromName, 'email' => $fromEmail],
+        'to'          => [['email' => $toEmail, 'name' => 'Techsallus']],
+        'subject'     => "🔔 Novo lead: {$nome} — {$inst}",
+        'htmlContent' => "
+            <div style='font-family:sans-serif;max-width:520px'>
+              <h2 style='color:#094a86'>Novo lead recebido!</h2>
+              <table style='width:100%;border-collapse:collapse'>
+                <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666'>Nome</td><td style='padding:8px;border-bottom:1px solid #eee'><strong>{$nome}</strong></td></tr>
+                <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666'>Instituição</td><td style='padding:8px;border-bottom:1px solid #eee'>{$inst}</td></tr>
+                <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666'>Cargo</td><td style='padding:8px;border-bottom:1px solid #eee'>{$cargo}</td></tr>
+                <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666'>E-mail</td><td style='padding:8px;border-bottom:1px solid #eee'><a href='mailto:{$email}'>{$email}</a></td></tr>
+                <tr><td style='padding:8px;border-bottom:1px solid #eee;color:#666'>WhatsApp</td><td style='padding:8px;border-bottom:1px solid #eee'><a href='https://wa.me/55{$whatsapp}'>{$whatsapp}</a></td></tr>
+                <tr><td style='padding:8px;color:#666'>Porte</td><td style='padding:8px'>{$porte}</td></tr>
+              </table>
+              <p style='margin-top:20px'><a href='https://techsallus.com.br/admin/crm.php' style='background:#094a86;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none'>Ver no CRM</a></p>
+            </div>
+        ",
+    ]);
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_HTTPHEADER     => [
+            'accept: application/json',
+            'api-key: ' . $apiKey,
+            'content-type: application/json',
+        ],
+        CURLOPT_TIMEOUT => 10,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+}

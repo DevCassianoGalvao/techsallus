@@ -97,62 +97,59 @@
   });
 
   /* ═══════════════════════════════════════════════════════════
-     LEAD FORM — Validation + submit
+     UTM CAPTURE
      ═══════════════════════════════════════════════════════════ */
-  const leadForm = document.getElementById('lead-form');
-  if (leadForm) {
-    const showError = (id, msg) => {
-      const field = document.getElementById(id);
-      if (!field) return;
-      field.classList.add('error');
-      let err = field.parentNode.querySelector('.error-msg');
-      if (!err) { err = document.createElement('span'); err.className = 'error-msg'; field.parentNode.appendChild(err); }
-      err.textContent = msg;
-    };
-    const clearError = (id) => {
-      const field = document.getElementById(id);
-      if (!field) return;
-      field.classList.remove('error');
-      const err = field.parentNode.querySelector('.error-msg');
-      if (err) err.textContent = '';
-    };
-
-    ['nome', 'instituicao', 'cargo', 'email', 'whatsapp', 'prof'].forEach(id => {
-      const f = document.getElementById(id);
-      if (f) f.addEventListener('input', () => clearError(id));
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    ['utm_source', 'utm_medium', 'utm_campaign'].forEach(key => {
+      const el = document.getElementById(key);
+      if (el && params.get(key)) el.value = params.get(key);
     });
+  })();
 
-    leadForm.addEventListener('submit', function (e) {
+  /* ═══════════════════════════════════════════════════════════
+     LEAD FORM — AJAX submit → /api/leads.php
+     ═══════════════════════════════════════════════════════════ */
+  const formDemo = document.getElementById('form-demo');
+  if (formDemo) {
+    formDemo.addEventListener('submit', async function (e) {
       e.preventDefault();
-      let valid = true;
 
-      const nome = document.getElementById('nome').value.trim();
-      const inst = document.getElementById('instituicao').value.trim();
-      const cargo = document.getElementById('cargo').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const wa   = document.getElementById('whatsapp').value.trim();
-      const prof = document.getElementById('prof').value;
+      const btn = this.querySelector('button[type="submit"]');
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
 
-      if (!nome) { showError('nome', 'Campo obrigatório'); valid = false; }
-      if (!inst)  { showError('instituicao', 'Campo obrigatório'); valid = false; }
-      if (!cargo) { showError('cargo', 'Campo obrigatório'); valid = false; }
-      if (!email || !/\S+@\S+\.\S+/.test(email)) { showError('email', 'E-mail inválido'); valid = false; }
-      if (!wa)   { showError('whatsapp', 'Campo obrigatório'); valid = false; }
-      if (!prof)  { showError('prof', 'Selecione uma opção'); valid = false; }
+      try {
+        const res  = await fetch('/api/leads.php', {
+          method: 'POST',
+          body:   new FormData(this),
+        });
+        const data = await res.json();
 
-      if (!valid) return;
-
-      const wrap = document.getElementById('form-section-inner');
-      wrap.innerHTML = `
-        <div class="form-success">
-          <div class="form-success-icon">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M6 14l5 5 11-10" stroke="#094a86" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h2>Recebemos sua solicitação!</h2>
-          <p>Nossa equipe entrará em contato em breve para agendar sua demonstração gratuita. Fique de olho no e-mail e WhatsApp.</p>
-        </div>`;
+        if (data.ok) {
+          formDemo.innerHTML = `
+            <div style="text-align:center;padding:48px 24px">
+              <div style="font-size:48px;margin-bottom:16px">✅</div>
+              <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;color:#0d1f35;margin-bottom:8px">
+                Solicitação recebida!
+              </h3>
+              <p style="color:#4a6080;font-size:15px">
+                Nossa equipe entrará em contato em breve para agendar a demonstração.
+              </p>
+            </div>
+          `;
+        } else {
+          const erros = data.erros ? data.erros.join('<br>') : data.erro;
+          alert('Erro: ' + erros);
+          btn.disabled = false;
+          btn.textContent = textoOriginal;
+        }
+      } catch (err) {
+        alert('Erro de conexão. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
     });
   }
 

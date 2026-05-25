@@ -1,33 +1,37 @@
 <?php
-/* ─────────────────────────────────────────────────────────────
-   TechSallus — Autenticação de admin (stub)
-   ───────────────────────────────────────────────────────────── */
-
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/DB.php';
 
 class Auth
 {
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
-            session_set_cookie_params([
-                'lifetime' => SESSION_LIFETIME,
-                'secure'   => true,
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]);
             session_start();
         }
+    }
+
+    public static function login(array $usuario): void
+    {
+        self::start();
+        session_regenerate_id(true);
+        $_SESSION['usuario_id']    = $usuario['id'];
+        $_SESSION['usuario_nome']  = $usuario['nome'];
+        $_SESSION['usuario_email'] = $usuario['email'];
+    }
+
+    public static function logout(): void
+    {
+        self::start();
+        session_unset();
+        session_destroy();
     }
 
     public static function check(): bool
     {
         self::start();
-        return !empty($_SESSION['admin_id']);
+        return !empty($_SESSION['usuario_id']);
     }
 
-    public static function requireAuth(): void
+    public static function require(): void
     {
         if (!self::check()) {
             header('Location: /admin/login.php');
@@ -35,24 +39,13 @@ class Auth
         }
     }
 
-    public static function login(string $email, string $password): bool
-    {
-        // TODO: implementar validação contra banco de dados
-        // Exemplo: SELECT * FROM admins WHERE email = ? AND is_active = 1
-        return false;
-    }
-
-    public static function logout(): void
+    public static function user(): array
     {
         self::start();
-        session_destroy();
-        header('Location: /admin/login.php');
-        exit;
-    }
-
-    public static function currentUser(): ?array
-    {
-        self::start();
-        return $_SESSION['admin_user'] ?? null;
+        return [
+            'id'    => $_SESSION['usuario_id']    ?? null,
+            'nome'  => $_SESSION['usuario_nome']  ?? '',
+            'email' => $_SESSION['usuario_email'] ?? '',
+        ];
     }
 }
