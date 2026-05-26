@@ -1,260 +1,252 @@
-/* ─────────────────────────────────────────────────────────────
-   TechSallus — main.js
-   Nav · Hamburger · Scroll-spy · Brazil Map · Form · GSAP
-   ───────────────────────────────────────────────────────────── */
-(function () {
-  'use strict';
+/* ═══════════════════════════════════════════════
+   MAIN.JS — Techsallus
+   Navbar, menu mobile, scroll-spy, GSAP,
+   UTM capture, form submit
+   ═══════════════════════════════════════════════ */
 
-  /* ── Smooth scroll helper ─────────────────────────────────── */
-  function scrollTo(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 68, behavior: 'smooth' });
-  }
+// ── NAVBAR SCROLL ─────────────────────────────
+const navbar = document.getElementById('navbar');
+if (navbar) {
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+}
 
-  /* ═══════════════════════════════════════════════════════════
-     HAMBURGER MENU
-     ═══════════════════════════════════════════════════════════ */
-  const hamburger = document.getElementById('nav-hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const mobileClose = document.getElementById('mobile-menu-close');
+// ── MENU HAMBURGER ────────────────────────────
+const hamburger  = document.getElementById('nav-hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+const mobileClose = document.getElementById('mobile-menu-close');
 
-  function openMenu() {
-    mobileMenu.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeMenu() {
-    mobileMenu.classList.remove('open');
-    document.body.style.overflow = '';
-  }
+function abrirMenu() {
+  mobileMenu.classList.add('open');
+  hamburger.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 
-  if (hamburger) hamburger.addEventListener('click', openMenu);
-  if (mobileClose) mobileClose.addEventListener('click', closeMenu);
+function fecharMenu() {
+  mobileMenu.classList.remove('open');
+  hamburger.classList.remove('open');
+  document.body.style.overflow = '';
+}
 
-  if (mobileMenu) {
-    mobileMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', function () {
-        closeMenu();
-        const href = this.getAttribute('href');
-        if (href && href.startsWith('#')) {
-          setTimeout(() => scrollTo(href.slice(1)), 10);
-        }
-      });
+if (hamburger)   hamburger.addEventListener('click', abrirMenu);
+if (mobileClose) mobileClose.addEventListener('click', fecharMenu);
+
+// Fechar ao clicar fora
+if (mobileMenu) {
+  mobileMenu.addEventListener('click', function (e) {
+    if (e.target === this) fecharMenu();
+  });
+}
+
+// Fechar links internos do menu mobile
+if (mobileMenu) {
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', fecharMenu);
+  });
+}
+
+// Fechar com ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fecharMenu();
+});
+
+// ── SCROLL-SPY ────────────────────────────────
+const sections = document.querySelectorAll('section[id], div[id]');
+const navLinks  = document.querySelectorAll('.nav-links a');
+
+if (sections.length && navLinks.length) {
+  const spyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          const href = link.getAttribute('href');
+          if (href === `#${id}` || href === `/#${id}`) {
+            link.classList.add('active');
+          }
+        });
+      }
     });
-  }
+  }, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
 
-  /* ═══════════════════════════════════════════════════════════
-     SCROLL-SPY (IntersectionObserver)
-     ═══════════════════════════════════════════════════════════ */
-  const sections = document.querySelectorAll('section[id], footer[id]');
-  const navLinks = document.querySelectorAll('.nav-links a[data-section]');
+  sections.forEach(s => spyObserver.observe(s));
+}
 
-  if (sections.length && navLinks.length) {
-    const sectionMap = { 'sobre': 'sistema', 'onde': 'suporte', 'contato': 'suporte' };
-    function setActive(id) {
-      navLinks.forEach(a => a.classList.toggle('active', a.dataset.section === id));
+// ── CAPTURA DE UTM ────────────────────────────
+(function captureUTM() {
+  const params = new URLSearchParams(window.location.search);
+  const keys   = ['utm_source', 'utm_medium', 'utm_campaign'];
+
+  keys.forEach(key => {
+    const val = params.get(key);
+    if (val) {
+      try { sessionStorage.setItem(key, val); } catch (e) {}
     }
-    const spy = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const raw = sectionMap[entry.target.id] || entry.target.id;
-          /* "Início" activates only at very top; once #sistema scrolls in, switch to "sistema" */
-          const active = (raw === 'sistema' && window.scrollY < 80) ? 'inicio' : raw;
-          setActive(active);
-        }
+
+    const el = document.getElementById(key);
+    if (el) {
+      const stored = (() => {
+        try { return sessionStorage.getItem(key); } catch (e) { return null; }
+      })();
+      el.value = val || stored || '';
+    }
+  });
+})();
+
+// ── SUBMIT DO FORMULÁRIO ──────────────────────
+const formDemo = document.getElementById('form-demo');
+if (formDemo) {
+  formDemo.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const btn  = this.querySelector('button[type="submit"]');
+    const orig = btn.textContent;
+    btn.disabled    = true;
+    btn.textContent = 'Enviando…';
+
+    try {
+      const res  = await fetch('/api/leads.php', {
+        method: 'POST',
+        body:   new FormData(this),
       });
-    }, { rootMargin: '-50% 0px -45% 0px', threshold: 0 });
-    sections.forEach(s => spy.observe(s));
-    /* Activate "inicio" by default on page load */
-    if (window.scrollY < 80) setActive('inicio');
-  }
+      const data = await res.json();
 
-  /* ═══════════════════════════════════════════════════════════
-     LANGUAGE SWITCHER
-     ═══════════════════════════════════════════════════════════ */
-  const langSwitcher = document.getElementById('lang-switcher');
-  const langBtn      = document.getElementById('lang-btn');
-  if (langSwitcher && langBtn) {
-    langBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const open = langSwitcher.classList.toggle('open');
-      langBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    document.addEventListener('click', function () {
-      langSwitcher.classList.remove('open');
-      langBtn.setAttribute('aria-expanded', 'false');
-    });
-  }
+      if (data.ok) {
+        formDemo.innerHTML = `
+          <div style="text-align:center;padding:48px 24px">
+            <div style="font-size:52px;margin-bottom:16px">✅</div>
+            <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:24px;color:#0d1f35;margin-bottom:10px;font-weight:800">
+              Solicitação recebida!
+            </h3>
+            <p style="color:#4a6080;font-size:15px;line-height:1.6;max-width:360px;margin:0 auto">
+              Nossa equipe entrará em contato em breve para agendar a demonstração gratuita.
+            </p>
+          </div>
+        `;
+      } else {
+        const msg = data.erros ? data.erros.join('\n') : (data.erro || 'Erro desconhecido.');
+        alert('Por favor, corrija os seguintes campos:\n\n' + msg);
+        btn.disabled    = false;
+        btn.textContent = orig;
+      }
+    } catch (err) {
+      alert('Erro de conexão. Verifique sua internet e tente novamente.');
+      btn.disabled    = false;
+      btn.textContent = orig;
+    }
+  });
+}
 
-  /* ═══════════════════════════════════════════════════════════
-     NAV CTA + ANCHOR LINKS
-     ═══════════════════════════════════════════════════════════ */
-  document.querySelectorAll('[data-scroll]').forEach(el => {
-    el.addEventListener('click', function (e) {
-      e.preventDefault();
-      scrollTo(this.dataset.scroll);
+// ── GSAP ANIMAÇÕES ────────────────────────────
+(function initGSAP() {
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero — entrada imediata
+  const heroTl = gsap.timeline({ delay: 0.1 });
+  heroTl
+    .from('.hero-label',      { opacity: 0, y: 20, duration: 0.6, ease: 'power2.out' })
+    .from('.hero-headline',   { opacity: 0, y: 24, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+    .from('.hero-sub',        { opacity: 0, y: 18, duration: 0.5, ease: 'power2.out' }, '-=0.35')
+    .from('.hero-ctas',       { opacity: 0, y: 14, duration: 0.5, ease: 'power2.out' }, '-=0.3')
+    .from('.hero-pills .pill',{ opacity: 0, y: 10, duration: 0.4, stagger: 0.08 },     '-=0.25')
+    .from('.dashboard-frame', { opacity: 0, x: 40, duration: 0.8, ease: 'power2.out' },'-=0.5');
+
+  // Sobre
+  gsap.from('.sobre h2, .sobre-text', {
+    scrollTrigger: { trigger: '.sobre', start: 'top 80%' },
+    opacity: 0, y: 28, duration: 0.7, stagger: 0.15
+  });
+
+  gsap.from('.stat-card', {
+    scrollTrigger: { trigger: '.stat-cards', start: 'top 85%' },
+    opacity: 0, y: 20, duration: 0.5, stagger: 0.12
+  });
+
+  // Contadores animados
+  document.querySelectorAll('.stat-card .stat-num').forEach(el => {
+    const raw    = el.textContent.trim();
+    const prefix = raw.startsWith('+') ? '+' : '';
+    const target = parseInt(raw.replace(/\D/g, ''), 10);
+    if (!target) return;
+
+    ScrollTrigger.create({
+      trigger: el,
+      start:   'top 85%',
+      once:    true,
+      onEnter: () => {
+        gsap.fromTo(
+          { val: 0 },
+          {
+            val:      target,
+            duration: 1.6,
+            ease:     'power2.out',
+            onUpdate: function () {
+              el.textContent = prefix + Math.round(this.targets()[0].val);
+            },
+          }
+        );
+      },
     });
   });
 
-  /* ═══════════════════════════════════════════════════════════
-     UTM CAPTURE
-     ═══════════════════════════════════════════════════════════ */
-  (function () {
-    const params = new URLSearchParams(window.location.search);
-    ['utm_source', 'utm_medium', 'utm_campaign'].forEach(key => {
-      const el = document.getElementById(key);
-      if (el && params.get(key)) el.value = params.get(key);
+  // Módulos
+  gsap.from('.modulo-card', {
+    scrollTrigger: { trigger: '.modulos-grid', start: 'top 80%' },
+    opacity: 0, y: 28, duration: 0.5,
+    stagger: { amount: 0.7, grid: [3, 3], from: 'start' }
+  });
+
+  // Por que Techsallus
+  gsap.from('.diferencial-item', {
+    scrollTrigger: { trigger: '.por-que', start: 'top 75%' },
+    opacity: 0, x: -24, duration: 0.5, stagger: 0.1
+  });
+
+  // Suporte
+  gsap.from('.suporte-text', {
+    scrollTrigger: { trigger: '.suporte', start: 'top 80%' },
+    opacity: 0, x: -28, duration: 0.7
+  });
+
+  gsap.from('.suporte-ilustracao', {
+    scrollTrigger: { trigger: '.suporte', start: 'top 80%' },
+    opacity: 0, x: 28, duration: 0.7
+  });
+
+  // Mapa
+  if (document.getElementById('mapa-brasil')) {
+    gsap.from('#mapa-brasil', {
+      scrollTrigger: { trigger: '.onde-estamos', start: 'top 75%' },
+      opacity: 0, scale: 0.96, duration: 0.8, ease: 'power2.out'
     });
-  })();
-
-  /* ═══════════════════════════════════════════════════════════
-     LEAD FORM — AJAX submit → /api/leads.php
-     ═══════════════════════════════════════════════════════════ */
-  const formDemo = document.getElementById('form-demo');
-  if (formDemo) {
-    formDemo.addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const btn = this.querySelector('button[type="submit"]');
-      const textoOriginal = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Enviando...';
-
-      try {
-        const res  = await fetch('/api/leads.php', {
-          method: 'POST',
-          body:   new FormData(this),
-        });
-        const data = await res.json();
-
-        if (data.ok) {
-          formDemo.innerHTML = `
-            <div style="text-align:center;padding:48px 24px">
-              <div style="font-size:48px;margin-bottom:16px">✅</div>
-              <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;color:#0d1f35;margin-bottom:8px">
-                Solicitação recebida!
-              </h3>
-              <p style="color:#4a6080;font-size:15px">
-                Nossa equipe entrará em contato em breve para agendar a demonstração.
-              </p>
-            </div>
-          `;
-        } else {
-          const erros = data.erros ? data.erros.join('<br>') : data.erro;
-          alert('Erro: ' + erros);
-          btn.disabled = false;
-          btn.textContent = textoOriginal;
-        }
-      } catch (err) {
-        alert('Erro de conexão. Tente novamente.');
-        btn.disabled = false;
-        btn.textContent = textoOriginal;
-      }
+    gsap.from('.legend-item', {
+      scrollTrigger: { trigger: '.map-legend', start: 'top 90%' },
+      opacity: 0, y: 10, duration: 0.4, stagger: 0.07
     });
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     GSAP ANIMATIONS
-     ═══════════════════════════════════════════════════════════ */
-  function initGSAP() {
-    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
-    gsap.registerPlugin(ScrollTrigger);
+  // Formulário
+  gsap.from('.form-container', {
+    scrollTrigger: { trigger: '#demo', start: 'top 80%' },
+    opacity: 0, y: 28, duration: 0.7
+  });
 
-    /* Hero — immediate entrance */
-    gsap.timeline()
-      .from('.hero-label',      { opacity: 0, y: 20, duration: 0.6, ease: 'power2.out' })
-      .from('.hero-headline',   { opacity: 0, y: 24, duration: 0.6, ease: 'power2.out' }, '-=0.4')
-      .from('.hero-sub',        { opacity: 0, y: 20, duration: 0.6, ease: 'power2.out' }, '-=0.4')
-      .from('.hero-ctas',       { opacity: 0, y: 16, duration: 0.5, ease: 'power2.out' }, '-=0.3')
-      .from('.hero-pills',      { opacity: 0, y: 12, duration: 0.5, ease: 'power2.out' }, '-=0.3')
-      .from('.dashboard-frame', { opacity: 0, x: 40, duration: 0.8, ease: 'power2.out' }, '-=0.6');
+  gsap.from('.trust-col', {
+    scrollTrigger: { trigger: '#demo', start: 'top 80%' },
+    opacity: 0, x: 24, duration: 0.7, delay: 0.2
+  });
 
-    /* Sobre */
-    gsap.from('.sobre-text', {
-      scrollTrigger: { trigger: '.sobre', start: 'top 80%' },
-      opacity: 0, y: 32, duration: 0.7, ease: 'power2.out'
-    });
-    gsap.from('.stat-card', {
-      scrollTrigger: { trigger: '.stat-cards', start: 'top 85%' },
-      opacity: 0, y: 24, duration: 0.6, stagger: 0.15, ease: 'power2.out'
-    });
+  // Planos
+  gsap.from('.plano-card', {
+    scrollTrigger: { trigger: '.planos-grid', start: 'top 80%' },
+    opacity: 0, y: 28, duration: 0.6, stagger: 0.15
+  });
 
-    /* Módulos */
-    gsap.from('.modulo-card', {
-      scrollTrigger: { trigger: '.modulos-grid', start: 'top 80%' },
-      opacity: 0, y: 30, duration: 0.5, ease: 'power2.out',
-      stagger: { amount: 0.8, grid: [3, 3], from: 'start' }
-    });
-
-    /* PorQuê */
-    gsap.from('.diferencial-item', {
-      scrollTrigger: { trigger: '.porque', start: 'top 75%' },
-      opacity: 0, x: -24, duration: 0.5, stagger: 0.12, ease: 'power2.out'
-    });
-
-    /* Suporte */
-    gsap.from('.suporte-text', {
-      scrollTrigger: { trigger: '.suporte', start: 'top 80%' },
-      opacity: 0, x: -32, duration: 0.7, ease: 'power2.out'
-    });
-    gsap.from('.suporte-ilustracao', {
-      scrollTrigger: { trigger: '.suporte', start: 'top 80%' },
-      opacity: 0, x: 32, duration: 0.7, ease: 'power2.out'
-    });
-
-    /* Mapa */
-    gsap.from('#mapa-brasil, #map-loading', {
-      scrollTrigger: { trigger: '.onde', start: 'top 75%' },
-      opacity: 0, scale: 0.97, duration: 0.8, ease: 'power2.out'
-    });
-
-    /* Formulário */
-    gsap.from('.form-container', {
-      scrollTrigger: { trigger: '.form-section', start: 'top 80%' },
-      opacity: 0, y: 32, duration: 0.7, ease: 'power2.out'
-    });
-    gsap.from('.trust-col', {
-      scrollTrigger: { trigger: '.form-section', start: 'top 80%' },
-      opacity: 0, x: 24, duration: 0.7, delay: 0.2, ease: 'power2.out'
-    });
-
-    /* Planos */
-    gsap.from('.plano-card', {
-      scrollTrigger: { trigger: '.planos', start: 'top 80%' },
-      opacity: 0, y: 28, duration: 0.6, stagger: 0.15, ease: 'power2.out'
-    });
-
-    /* Animated counters */
-    document.querySelectorAll('.stat-num[data-target]').forEach(el => {
-      const target = parseInt(el.dataset.target, 10);
-      const prefix = el.dataset.prefix || '';
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top 85%',
-        once: true,
-        onEnter: () => {
-          gsap.fromTo({ val: 0 }, {
-            val: target,
-            duration: 1.5,
-            ease: 'power2.out',
-            onUpdate: function () {
-              el.textContent = prefix + Math.round(this.targets()[0].val);
-            }
-          });
-        }
-      });
-    });
-
-    window.addEventListener('load', () => ScrollTrigger.refresh());
-  }
-
-  /* Gate animations on prefers-reduced-motion */
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    if (document.readyState === 'complete') {
-      initGSAP();
-    } else {
-      window.addEventListener('load', initGSAP);
-    }
-  }
-
+  // Refresh após fontes carregarem
+  window.addEventListener('load', () => ScrollTrigger.refresh());
 })();
