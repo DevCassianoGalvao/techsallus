@@ -100,6 +100,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $results[] = ['ok', 'Tabela lead_notas criada'];
 
         $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `lead_historico` (
+                `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `lead_id`    INT UNSIGNED NOT NULL,
+                `usuario_id` INT UNSIGNED DEFAULT NULL,
+                `tipo`       ENUM('criacao','mover','nota') NOT NULL,
+                `descricao`  VARCHAR(300) NOT NULL,
+                `criado_em`  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (`lead_id`)    REFERENCES `leads`(`id`)    ON DELETE CASCADE,
+                FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON DELETE SET NULL,
+                INDEX `idx_lead_id` (`lead_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+        $results[] = ['ok', 'Tabela lead_historico criada'];
+
+        $pdo->exec("
             CREATE TABLE IF NOT EXISTS `categorias` (
                 `id`   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 `nome` VARCHAR(100) NOT NULL,

@@ -1,13 +1,13 @@
 /* ─────────────────────────────────────────────────────────────
    TechSallus — admin.js
-   Kanban (SortableJS) · Lead modal · Notes AJAX
+   Kanban (SortableJS) · Lead modal · Notes AJAX · Histórico AJAX
    ───────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
 
   /* ── Helpers ─────────────────────────────────────────────── */
   function escHtml(str) {
-    const d = document.createElement('div');
+    var d = document.createElement('div');
     d.textContent = str == null ? '' : String(str);
     return d.innerHTML;
   }
@@ -48,10 +48,12 @@
       setText('modal-utm', utm);
     }
 
-    /* Reset to detalhes tab, clear notes */
+    /* Reset to detalhes tab, clear lists */
     switchTab('detalhes');
     var notesList = document.getElementById('notes-list');
     if (notesList) notesList.innerHTML = '';
+    var histList = document.getElementById('historico-list');
+    if (histList) histList.innerHTML = '';
 
     modalOverlay.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -94,7 +96,8 @@
     tab.addEventListener('click', function () {
       var name = this.dataset.tab;
       switchTab(name);
-      if (name === 'notas' && currentLeadId) loadNotas(currentLeadId);
+      if (name === 'notas'     && currentLeadId) loadNotas(currentLeadId);
+      if (name === 'historico' && currentLeadId) loadHistorico(currentLeadId);
     });
   });
 
@@ -171,6 +174,46 @@
           if (btn) btn.disabled = false;
         });
     });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     HISTÓRICO
+     ═══════════════════════════════════════════════════════════ */
+  var tipoIcons = {
+    criacao: '✦',
+    mover:   '→',
+    nota:    '✎',
+  };
+
+  function loadHistorico(leadId) {
+    var list = document.getElementById('historico-list');
+    if (!list) return;
+    list.innerHTML = '<p style="color:#4a6080;font-size:13px">Carregando…</p>';
+
+    postJSON('/api/crm.php', { action: 'historico', lead_id: parseInt(leadId, 10) })
+      .then(function (data) {
+        if (!data.ok) throw new Error(data.erro || 'Erro');
+        if (!data.historico || data.historico.length === 0) {
+          list.innerHTML = '<p style="color:#4a6080;font-size:13px">Nenhuma movimentação registrada.</p>';
+          return;
+        }
+        list.innerHTML = data.historico.map(function (h) {
+          var icon = tipoIcons[h.tipo] || '·';
+          var user = h.usuario_nome ? ' · ' + escHtml(h.usuario_nome) : '';
+          return (
+            '<div class="hist-item hist-' + escHtml(h.tipo) + '">' +
+              '<span class="hist-type">' + icon + '</span>' +
+              '<div class="hist-body">' +
+                '<span class="hist-desc">' + escHtml(h.descricao) + '</span>' +
+                '<span class="hist-date">' + escHtml(h.criado_em) + user + '</span>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      })
+      .catch(function () {
+        if (list) list.innerHTML = '<p style="color:#dc2626;font-size:13px">Erro ao carregar histórico.</p>';
+      });
   }
 
   /* ═══════════════════════════════════════════════════════════

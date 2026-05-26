@@ -1,0 +1,14 @@
+feat: admin QoL — filtros CRM + export CSV + historico + preview blog (Parte 5)
+
+- install.php: tabela lead_historico (tipo: criacao/mover/nota)
+- api/exportar-leads.php: novo — CSV com BOM UTF-8, mesmos filtros do CRM
+- public/blog/preview.php: novo — prévia auth-guarded com banner laranja
+- api/crm.php: mover/adicionar_nota gravam historico; nova action 'historico'
+- admin/crm.php: filtros (busca + porte + periodo), topbar com contagem + export
+- admin/crm.php: modal com 3a aba Historico
+- admin/blog-editor.php: reescrito com _header.php, Auth::require(), botao previa
+- admin.js: loadHistorico(), tab click atualizado, limpa historico ao abrir modal
+- admin.css: .crm-filters, .filter-*, .btn-export, .btn-preview, .hist-*, .editor-*
+- api/leads.php: grava lead_historico na criacao (non-fatal)
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

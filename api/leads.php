@@ -93,6 +93,16 @@ try {
         [$nome, $instituicao, $cargo, $email, $whatsapp, $porte, $utm_source, $utm_medium, $utm_campaign, $ip_origem]
     );
 
+    /* ── Histórico de criação (non-fatal) ─────────────────────── */
+    try {
+        DB::query(
+            "INSERT INTO lead_historico (lead_id, usuario_id, tipo, descricao) VALUES (?, NULL, 'criacao', 'Lead cadastrado via formulário')",
+            [$leadId]
+        );
+    } catch (Exception $he) {
+        error_log('Historico criacao: ' . $he->getMessage());
+    }
+
     notificarBrevo($nome, $instituicao, $cargo, $email, $whatsapp, $porte);
 
     echo json_encode(['ok' => true, 'id' => $leadId]);

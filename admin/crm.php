@@ -1,6 +1,6 @@
 <?php
 /* ─────────────────────────────────────────────────────────────
-   admin/crm.php — CRM Kanban board
+   admin/crm.php — CRM Kanban board com filtros e histórico
    ───────────────────────────────────────────────────────────── */
 define('ADMIN_PAGE', true);
 
@@ -15,7 +15,14 @@ $adminUser = Auth::user();
 $pageTitle = 'CRM · Leads';
 $activeNav = 'crm';
 
-/* ── Load leads ─────────────────────────────────────────────── */
+/* ── Filtros via GET ────────────────────────────────────────── */
+$busca = trim($_GET['busca'] ?? '');
+$porte = trim($_GET['porte'] ?? '');
+$de    = trim($_GET['de']    ?? '');
+$ate   = trim($_GET['ate']   ?? '');
+$temFiltro = $busca || $porte || $de || $ate;
+
+/* ── Query com filtros ──────────────────────────────────────── */
 $dbOk   = false;
 $grouped = [
     'novo'       => [],
@@ -23,21 +30,71 @@ $grouped = [
     'proposta'   => [],
     'fechamento' => [],
 ];
+$portesDisponiveis = [];
+$totalFiltrado     = 0;
 
 try {
-    $leads = DB::fetchAll(
-        "SELECT id, nome, instituicao, cargo, email, whatsapp, porte, status,
-                utm_source, utm_medium, utm_campaign, criado_em
-         FROM leads ORDER BY criado_em DESC"
-    );
+    /* Portes distintos para o dropdown */
+    $portesDisponiveis = DB::fetchAll("SELECT DISTINCT porte FROM leads WHERE porte != '' ORDER BY porte");
+
+    /* Query principal com WHERE dinâmico */
+    $where  = ['1=1'];
+    $params = [];
+
+    if ($busca) {
+        $where[]  = '(nome LIKE ? OR email LIKE ? OR instituicao LIKE ?)';
+        $like     = '%' . $busca . '%';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+    if ($porte) {
+        $where[]  = 'porte = ?';
+        $params[] = $porte;
+    }
+    if ($de) {
+        $where[]  = 'DATE(criado_em) >= ?';
+        $params[] = $de;
+    }
+    if ($ate) {
+        $where[]  = 'DATE(criado_em) <= ?';
+        $params[] = $ate;
+    }
+
+    $sql = 'SELECT id, nome, instituicao, cargo, email, whatsapp, porte, status,
+                   utm_source, utm_medium, utm_campaign, criado_em
+            FROM leads WHERE ' . implode(' AND ', $where) . ' ORDER BY criado_em DESC';
+
+    $leads = DB::fetchAll($sql, $params);
     foreach ($leads as $lead) {
         $s = $lead['status'];
         if (isset($grouped[$s])) $grouped[$s][] = $lead;
     }
+    $totalFiltrado = count($leads);
     $dbOk = true;
 } catch (Exception $e) {
     $dbError = $e->getMessage();
 }
+
+/* ── Topbar: contagem + botão export ───────────────────────── */
+$exportParams = http_build_query(array_filter([
+    'busca' => $busca,
+    'porte' => $porte,
+    'de'    => $de,
+    'ate'   => $ate,
+]));
+$exportUrl = '/api/exportar-leads.php' . ($exportParams ? '?' . $exportParams : '');
+
+$topbarExtra = '<div class="topbar-actions">
+  <span class="admin-muted">' . ($dbOk ? $totalFiltrado . ' lead' . ($totalFiltrado !== 1 ? 's' : '') : '—') . '</span>
+  <a href="' . htmlspecialchars($exportUrl) . '" class="btn-export">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+    Exportar CSV
+  </a>
+</div>';
+
+/* SortableJS antes de admin.js */
+$extraScripts = '<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>';
 
 $colMeta = [
     'novo'       => ['label' => 'Novo',       'class' => 'col-novo'],
@@ -45,9 +102,6 @@ $colMeta = [
     'proposta'   => ['label' => 'Proposta',    'class' => 'col-proposta'],
     'fechamento' => ['label' => 'Fechamento',  'class' => 'col-fechamento'],
 ];
-
-/* SortableJS from CDN loaded before admin.js */
-$extraScripts = '<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>';
 
 include __DIR__ . '/_header.php';
 ?>
@@ -64,6 +118,45 @@ include __DIR__ . '/_header.php';
 
 <?php else: ?>
 
+  <!-- Filtros -->
+  <div class="crm-filters">
+    <form method="GET" class="filter-form" action="/admin/crm.php">
+      <input
+        type="text"
+        name="busca"
+        class="filter-input"
+        placeholder="Buscar por nome, e-mail ou instituição…"
+        value="<?= htmlspecialchars($busca) ?>"
+      />
+
+      <select name="porte" class="filter-select">
+        <option value="">Todos os portes</option>
+        <?php foreach ($portesDisponiveis as $p): ?>
+          <option value="<?= htmlspecialchars($p['porte']) ?>"
+            <?= $porte === $p['porte'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($p['porte']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+
+      <input type="date" name="de"  class="filter-select" value="<?= htmlspecialchars($de) ?>"  title="Data inicial"/>
+      <input type="date" name="ate" class="filter-select" value="<?= htmlspecialchars($ate) ?>" title="Data final"/>
+
+      <button type="submit" class="filter-btn">Filtrar</button>
+
+      <?php if ($temFiltro): ?>
+        <a href="/admin/crm.php" class="filter-clear">Limpar</a>
+      <?php endif; ?>
+    </form>
+
+    <?php if ($temFiltro): ?>
+      <div class="filter-result-info">
+        <?= $totalFiltrado ?> resultado<?= $totalFiltrado !== 1 ? 's' : '' ?> com os filtros aplicados
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <!-- Kanban -->
   <div class="kanban-board">
     <?php foreach ($colMeta as $status => $meta): ?>
       <div class="kanban-col <?= $meta['class'] ?>" data-status="<?= $status ?>">
@@ -127,6 +220,7 @@ include __DIR__ . '/_header.php';
     <div class="modal-tabs">
       <button type="button" class="modal-tab active" data-tab="detalhes">Detalhes</button>
       <button type="button" class="modal-tab" data-tab="notas">Notas</button>
+      <button type="button" class="modal-tab" data-tab="historico">Histórico</button>
     </div>
 
     <div class="modal-body">
@@ -171,6 +265,11 @@ include __DIR__ . '/_header.php';
           <textarea class="note-input" id="note-input" placeholder="Adicionar nota…" rows="2"></textarea>
           <button type="submit" class="note-submit">Salvar</button>
         </form>
+      </div>
+
+      <!-- Histórico tab -->
+      <div class="modal-tab-pane" data-tab="historico">
+        <div class="historico-list" id="historico-list"></div>
       </div>
     </div><!-- /.modal-body -->
   </div><!-- /.modal-box -->
