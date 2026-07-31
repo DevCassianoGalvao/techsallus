@@ -2,20 +2,14 @@
 /* ─────────────────────────────────────────────────────────────
    public/404.php — Custom 404 page
    ───────────────────────────────────────────────────────────── */
-$rootDir = dirname(__DIR__);
-if (!file_exists($rootDir . '/core/Env.php')) {
-    $rootDir = __DIR__;
-}
+$rootDir = __DIR__;
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
 Security::headers();
 
-$_cfg = file_exists(__DIR__ . '/../config/i18n.php')
-    ? __DIR__ . '/../config/i18n.php'
-    : __DIR__ . '/config/i18n.php';
-require_once $_cfg;
+require_once $rootDir . '/config/i18n.php';
 
 http_response_code(404);
 

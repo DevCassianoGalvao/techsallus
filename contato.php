@@ -1,13 +1,10 @@
 <?php
-$_root = file_exists(__DIR__ . '/../core/Settings.php') ? dirname(__DIR__) : __DIR__;
+$_root = __DIR__;
 require_once $_root . '/core/Security.php';
 Security::headers();
 Security::csrfToken();
 
-$_cfg = file_exists(__DIR__ . '/../config/i18n.php')
-    ? __DIR__ . '/../config/i18n.php'
-    : __DIR__ . '/config/i18n.php';
-require_once $_cfg;
+require_once __DIR__ . '/config/i18n.php';
 require_once $_root . '/core/Settings.php';
 require_once __DIR__ . '/_partials/icons.php';
 

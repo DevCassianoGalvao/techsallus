@@ -3,10 +3,7 @@
    public/sitemap.php — Dynamic XML sitemap
    Accessible at: /sitemap.xml (via .htaccess rewrite)
    ───────────────────────────────────────────────────────────── */
-$rootDir = dirname(__DIR__);
-if (!file_exists($rootDir . '/core/Env.php')) {
-    $rootDir = __DIR__;
-}
+$rootDir = __DIR__;
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 Env::load($rootDir . '/.env');

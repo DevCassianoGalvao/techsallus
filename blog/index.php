@@ -2,10 +2,7 @@
 /* ─────────────────────────────────────────────────────────────
    public/blog/index.php — Blog público — listagem com paginação
    ───────────────────────────────────────────────────────────── */
-$rootDir = dirname(dirname(__DIR__));
-if (!file_exists($rootDir . '/core/Env.php')) {
-    $rootDir = dirname(__DIR__);
-}
+$rootDir = dirname(__DIR__);
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Settings.php';

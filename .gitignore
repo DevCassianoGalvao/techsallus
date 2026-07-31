@@ -4,5 +4,5 @@
 .DS_Store
 Thumbs.db
 .claude/
-/public/assets/uploads/*
-!/public/assets/uploads/.gitkeep
+/assets/uploads/*
+!/assets/uploads/.gitkeep

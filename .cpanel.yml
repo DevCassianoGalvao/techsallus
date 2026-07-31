@@ -1,9 +1,9 @@
 ---
 deployment:
   tasks:
-    # Repositorio e clonado direto dentro de /home/xdigcomb/techsallus (mesma pasta que serve o site).
-    # admin/, api/, core/, config/ ja estao no lugar certo; so o conteudo de public/ precisa
-    # "subir" pro mesmo nivel. O cp por cima do public/.htaccess sobrescreve o .htaccess certo
-    # da raiz do repo, entao restauramos ele do git logo em seguida.
-    - /bin/cp -R public/. .
-    - /usr/bin/git checkout -- .htaccess
+    # O repositorio agora tem a mesma estrutura flat que o site em producao
+    # espera (nada de pasta public/ separada), entao nao ha nada pra copiar
+    # ou reorganizar. "Update from Remote" ja deixa os arquivos no lugar
+    # certo; este passo so existe pra satisfazer o requisito do cPanel de
+    # ter um .cpanel.yml valido pra habilitar o botao "Deploy HEAD Commit".
+    - /bin/true
