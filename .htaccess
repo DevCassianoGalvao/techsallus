@@ -27,6 +27,9 @@
 
   # ── Bloquear acesso a pastas sensíveis ──────────────────────
   RewriteRule ^(core|config)/ - [F,L]
+
+  # ── Bloquear acesso à pasta .git (repositório clonado direto na pasta do site) ──
+  RewriteRule ^\.git(/|$) - [F,L]
 </IfModule>
 
 # Prevenir listagem de diretórios

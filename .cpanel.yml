@@ -1,10 +1,9 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=$HOME/techsallus/
-    - /bin/cp -R public/. $DEPLOYPATH
-    - /bin/cp -R admin $DEPLOYPATH
-    - /bin/cp -R api $DEPLOYPATH
-    - /bin/cp -R core $DEPLOYPATH
-    - /bin/cp -R config $DEPLOYPATH
-    - /bin/cp -f .htaccess $DEPLOYPATH
+    # Repositorio e clonado direto dentro de /home/xdigcomb/techsallus (mesma pasta que serve o site).
+    # admin/, api/, core/, config/ ja estao no lugar certo; so o conteudo de public/ precisa
+    # "subir" pro mesmo nivel. O cp por cima do public/.htaccess sobrescreve o .htaccess certo
+    # da raiz do repo, entao restauramos ele do git logo em seguida.
+    - /bin/cp -R public/. .
+    - /usr/bin/git checkout -- .htaccess
