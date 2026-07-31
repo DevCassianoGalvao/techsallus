@@ -270,7 +270,7 @@ function getScripts(string $pos): string {
 
 <?= getScripts('body') ?>
 <?= getScripts('footer') ?>
-<script src="/assets/js/main.js?v=20260731b"></script>
+<script src="/assets/js/main.js?v=20260731c"></script>
 <script>
 /* Adicionar IDs nos H2s para o índice */
 document.querySelectorAll('.article-content-body h2').forEach(function(el, i) {

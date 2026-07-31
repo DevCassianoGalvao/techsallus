@@ -12,6 +12,6 @@ if (!defined('ADMIN_PAGE')) { http_response_code(403); exit; }
 </div><!-- /.admin-layout -->
 
 <?= $extraScripts ?? '' ?>
-<script src="/assets/js/admin.js"></script>
+<script src="/assets/js/admin.js?v=20260731c"></script>
 </body>
 </html>

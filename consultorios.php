@@ -69,7 +69,7 @@ $_resources = [
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<link rel="stylesheet" href="/assets/css/main.css?v=20260731b"/>
+<link rel="stylesheet" href="/assets/css/main.css?v=20260731c"/>
 <?= getScripts('head') ?>
 </head>
 <body>
@@ -144,6 +144,6 @@ $_resources = [
 </main>
 
 <?php include __DIR__ . '/_partials/footer.php'; ?>
-<script src="/assets/js/main.js?v=20260731b"></script>
+<script src="/assets/js/main.js?v=20260731c"></script>
 </body>
 </html>

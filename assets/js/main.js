@@ -29,6 +29,32 @@
     }
   }
 
+  /* ── Nav: "Soluções" dropdown (hover-intent with close delay) ── */
+  function initDropdown() {
+    document.querySelectorAll('.has-drop').forEach(function (drop) {
+      var closeTimer = null;
+      drop.addEventListener('mouseenter', function () {
+        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+        drop.classList.add('force-open');
+      });
+      drop.addEventListener('mouseleave', function () {
+        closeTimer = setTimeout(function () { drop.classList.remove('force-open'); }, 300);
+      });
+      var btn = drop.querySelector('button');
+      if (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          drop.classList.toggle('force-open');
+        });
+      }
+    });
+    document.addEventListener('click', function (e) {
+      document.querySelectorAll('.has-drop.force-open').forEach(function (drop) {
+        if (!drop.contains(e.target)) drop.classList.remove('force-open');
+      });
+    });
+  }
+
   /* ── Lang switcher ───────────────────────────────────────────── */
   var langSwitcher = document.getElementById('lang-switcher');
   var langBtn = document.getElementById('lang-btn');
@@ -181,6 +207,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     initNav();
+    initDropdown();
     initFAQ();
     initPriorityPills();
     initContactForm();
