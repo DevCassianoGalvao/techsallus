@@ -101,6 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         foreach ([
             'tipo_instituicao VARCHAR(100) DEFAULT NULL AFTER instituicao',
+            'perfil_operacao VARCHAR(50) DEFAULT NULL AFTER tipo_instituicao',
+            'principal_desafio VARCHAR(50) DEFAULT NULL AFTER perfil_operacao',
+            'mensagem TEXT DEFAULT NULL AFTER principal_desafio',
             'cidade VARCHAR(120) DEFAULT NULL AFTER porte',
             'estado CHAR(2) DEFAULT NULL AFTER cidade',
             'utm_term VARCHAR(150) DEFAULT NULL AFTER utm_campaign',
