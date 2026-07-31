@@ -20,6 +20,11 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^blog/([a-z0-9-]+)/?$ /blog/artigo.php?slug=$1 [L,QSA]
 
+  # ── URLs limpas: /consultorios → consultorios.php ───────────
+  RewriteCond %{REQUEST_FILENAME}.php -f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^([a-z0-9-]+)/?$ $1.php [L]
+
   # ── Bloquear acesso a pastas sensíveis ──────────────────────
   RewriteRule ^(core|config)/ - [F,L]
 </IfModule>
