@@ -1,20 +1,25 @@
 <?php
-/* Auto-detect config path: dev (public/../config) vs prod flat (techsallus/config) */
+/* Auto-detect paths: dev (public/..) vs prod flat (htdocs root) */
+$_root = file_exists(__DIR__ . '/../core/Settings.php') ? dirname(__DIR__) : __DIR__;
+require_once $_root . '/core/Security.php';
+Security::headers();
+Security::csrfToken();
+
 $_cfg = file_exists(__DIR__ . '/../config/i18n.php')
     ? __DIR__ . '/../config/i18n.php'
     : __DIR__ . '/config/i18n.php';
 require_once $_cfg;
+require_once $_root . '/core/Settings.php';
 
-/* Prefix all absolute href/src with BASE when running in a subfolder */
-if (BASE !== '') {
-    $__b = BASE;
-    ob_start(function ($h) use ($__b) {
-        return str_replace(
-            ['href="/', 'src="/', "href='/", "src='/"],
-            ['href="'.$__b.'/', 'src="'.$__b.'/', "href='".$__b."/", "src='".$__b."/"],
-            $h
-        );
-    });
+function getScripts(string $pos): string {
+    try {
+        return implode("\n", array_column(
+            DB::fetchAll("SELECT conteudo FROM scripts_injecao WHERE posicao=? AND ativo=1 AND conteudo != ''", [$pos]),
+            'conteudo'
+        ));
+    } catch (Exception $e) {
+        return '';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -22,92 +27,30 @@ if (BASE !== '') {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TechSallus — Sistema de Gestão Hospitalar</title>
-  <meta name="description" content="Plataforma modular de gestão hospitalar que integra agendamento, atendimento, prontuário, faturamento, estoque e financeiro em um único sistema."/>
+  <title><?= tx('Sistema de Gestão para Clínicas e Hospitais | TechSallus', 'Management System for Clinics and Hospitals | TechSallus', 'Sistema de Gestión para Clínicas y Hospitales | TechSallus') ?></title>
+  <meta name="description" content="<?= tx('Reduza faltas, agilize o atendimento e ganhe mais controle sobre faturamento, glosas, estoque e custos com uma gestão integrada para instituições de saúde.', 'Reduce no-shows, speed up care and gain more control over billing, denials, inventory and costs with integrated management for health institutions.', 'Reduzca ausencias, agilice la atención y gane más control sobre facturación, glosas, inventario y costos con una gestión integrada para instituciones de salud.') ?>"/>
 
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg"/>
-  <link rel="shortcut icon" href="/assets/img/favicon.svg"/>
+  <link rel="icon" type="image/png" href="/assets/img/favicon.png"/>
+  <link rel="shortcut icon" href="/assets/img/favicon.png"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 
-  <link rel="stylesheet" href="/assets/css/main.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <link rel="stylesheet" href="/assets/css/main.css?v=20260731a"/>
+  <?= getScripts('head') ?>
 </head>
 <body>
+<?= getScripts('body') ?>
 
-<!-- ══════════════════════════════════════════════════════════════
-     NAVIGATION
-     ══════════════════════════════════════════════════════════════ -->
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="#" data-scroll="sistema" aria-label="TechSallus – ir ao topo">
-      <img src="/assets/img/logo.png" alt="Techsallus" class="nav-logo"/>
-    </a>
-
-    <div class="nav-links">
-      <a href="#sistema"  data-section="inicio"   data-scroll="sistema"><?= t('nav_home') ?></a>
-      <a href="#sobre"    data-section="sistema"  data-scroll="sobre"><?= t('nav_system') ?></a>
-      <a href="#modulos"  data-section="modulos"  data-scroll="modulos"><?= t('nav_modules') ?></a>
-      <a href="#planos"   data-section="planos"   data-scroll="planos"><?= t('nav_plans') ?></a>
-      <a href="#suporte"  data-section="suporte"  data-scroll="suporte"><?= t('nav_support') ?></a>
-      <a href="/blog/"><?= t('nav_blog') ?></a>
-    </div>
-
-    <div class="nav-right">
-      <div class="lang-switcher" id="lang-switcher">
-        <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-          <span class="lang-current"><?= t('lang_label') ?></span>
-          <svg class="lang-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <ul class="lang-dropdown" role="listbox" aria-label="Selecionar idioma">
-          <li><a href="/setlang.php?lang=pt"<?= $LANG==='pt' ? ' class="lang-active"' : '' ?>><?= t('lang_pt') ?></a></li>
-          <li><a href="/setlang.php?lang=en"<?= $LANG==='en' ? ' class="lang-active"' : '' ?>><?= t('lang_en') ?></a></li>
-          <li><a href="/setlang.php?lang=es"<?= $LANG==='es' ? ' class="lang-active"' : '' ?>><?= t('lang_es') ?></a></li>
-        </ul>
-      </div>
-      <a href="#contato" class="nav-cta" data-scroll="contato"><?= t('nav_cta') ?></a>
-    </div>
-
-    <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-</nav>
-
-<!-- ══════════════════════════════════════════════════════════════
-     MOBILE MENU OVERLAY
-     ══════════════════════════════════════════════════════════════ -->
-<div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu de navegação">
-  <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Fechar menu">&#x2715;</button>
-  <nav>
-    <a href="#sobre" data-scroll="sobre"><?= t('nav_system') ?></a>
-    <a href="#modulos" data-scroll="modulos"><?= t('nav_modules') ?></a>
-    <a href="#planos"  data-scroll="planos"><?= t('nav_plans') ?></a>
-    <a href="#suporte" data-scroll="suporte"><?= t('nav_support') ?></a>
-    <a href="/blog/"><?= t('nav_blog') ?></a>
-    <a href="#contato" data-scroll="contato" style="color:#ff7300"><?= t('nav_demo') ?></a>
-  </nav>
-  <div class="mobile-lang">
-    <a href="/setlang.php?lang=pt"<?= $LANG==='pt' ? ' class="lang-active"' : '' ?>>PT</a>
-    <span class="mobile-lang-sep">|</span>
-    <a href="/setlang.php?lang=en"<?= $LANG==='en' ? ' class="lang-active"' : '' ?>>EN</a>
-    <span class="mobile-lang-sep">|</span>
-    <a href="/setlang.php?lang=es"<?= $LANG==='es' ? ' class="lang-active"' : '' ?>>ES</a>
-  </div>
-</div>
+<?php include __DIR__ . '/_partials/nav.php'; ?>
 
 <main>
 
 <!-- ══════════════════════════════════════════════════════════════
-     HERO — #sistema
+     HERO
      ══════════════════════════════════════════════════════════════ -->
-<section id="sistema" class="hero">
-  <!-- Line-grid texture -->
+<section class="hero">
   <svg class="hero-grid-bg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
     <defs>
       <pattern id="linegrid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -119,40 +62,32 @@ if (BASE !== '') {
 
   <div class="container">
     <div class="hero-inner">
-      <!-- Left copy -->
       <div class="hero-copy">
         <div class="hero-label">
           <div class="hero-label-bar"></div>
-          <span>Sistema de gestão hospitalar</span>
+          <span><?= tx('Gestão integrada para instituições de saúde', 'Integrated management for health institutions', 'Gestión integrada para instituciones de salud') ?></span>
         </div>
 
         <h1 class="hero-headline">
-          O sistema completo para a sua clínica ou hospital funcionar melhor
-          <em> a partir de hoje</em>
+          <span class="hero-headline-orange"><?= tx('Menos faltas. Atendimento mais ágil.', 'Fewer no-shows. Faster care.', 'Menos ausencias. Atención más ágil.') ?></span>
+          <span class="hero-headline-rest"><?= tx('Mais controle sobre o faturamento.', 'More control over billing.', 'Más control sobre la facturación.') ?></span>
         </h1>
 
         <p class="hero-sub">
-          O TechSallus é uma plataforma modular de gestão hospitalar que integra agendamento, atendimento, prontuário, faturamento, estoque e financeiro em um único sistema — sem precisar contratar vários fornecedores.
+          <?= tx('A TechSallus conecta agenda, recepção, assistência, faturamento e gestão para reduzir retrabalho, melhorar a jornada do paciente e dar mais previsibilidade à operação.', 'TechSallus connects scheduling, front desk, care, billing and management to reduce rework, improve the patient journey and bring more predictability to the operation.', 'TechSallus conecta agenda, recepción, asistencia, facturación y gestión para reducir el retrabajo, mejorar el recorrido del paciente y dar más previsibilidad a la operación.') ?>
         </p>
 
         <div class="hero-ctas">
-          <a href="#contato" class="btn-primary" data-scroll="contato">Quero conhecer o sistema</a>
-          <a href="#planos"  class="btn-outline-white" data-scroll="planos">Ver planos e preços</a>
+          <a href="/contato" class="btn-primary"><?= tx('Quero melhorar minha operação', 'I want to improve my operation', 'Quiero mejorar mi operación') ?></a>
+          <a href="#solucoes" class="btn-outline-white" data-scroll="solucoes"><?= tx('Conhecer as soluções', 'See the solutions', 'Conocer las soluciones') ?></a>
         </div>
 
-        <div class="hero-pills">
-          <div class="hero-pill"><span class="hero-pill-star">✦</span><span>Tudo integrado em uma plataforma</span></div>
-          <div class="hero-pill"><span class="hero-pill-star">✦</span><span>Sem instalação local</span></div>
-          <div class="hero-pill"><span class="hero-pill-star">✦</span><span>Suporte técnico humanizado</span></div>
-          <div class="hero-pill"><span class="hero-pill-star">✦</span><span>Configurado para a sua realidade</span></div>
-        </div>
+        <p class="hero-caption"><?= tx('Solução modular para consultórios, clínicas, policlínicas, hospitais e pronto atendimento.', 'A modular solution for private practices, clinics, polyclinics, hospitals and urgent care.', 'Solución modular para consultorios, clínicas, policlínicas, hospitales y urgencias.') ?></p>
       </div>
 
-      <!-- Right — dashboard mockup -->
       <div class="hero-visual">
         <div class="dashboard-frame">
           <div class="dashboard-inner">
-            <!-- Topbar -->
             <div class="db-topbar">
               <div class="db-dots">
                 <span class="db-dot orange"></span>
@@ -160,37 +95,35 @@ if (BASE !== '') {
                 <span class="db-dot dim"></span>
               </div>
               <div class="db-tabs">
-                <span class="db-tab active">Agenda</span>
-                <span class="db-tab">Atendimento</span>
-                <span class="db-tab">Financeiro</span>
+                <span class="db-tab active"><?= tx('Agenda', 'Schedule', 'Agenda') ?></span>
+                <span class="db-tab"><?= tx('Atendimento', 'Care', 'Atención') ?></span>
+                <span class="db-tab"><?= tx('Financeiro', 'Finance', 'Finanzas') ?></span>
               </div>
               <div class="db-avatar-wrap">
                 <div class="db-avatar">DM</div>
               </div>
             </div>
-            <!-- Stat cards -->
             <div class="db-stats">
               <div class="db-stat-card">
-                <div class="db-stat-label">Agendamentos</div>
+                <div class="db-stat-label"><?= tx('Agendamentos', 'Appointments', 'Citas') ?></div>
                 <div class="db-stat-value">1.247</div>
-                <div class="db-stat-tag">▲ +12% mês</div>
+                <div class="db-stat-tag">▲ +12% <?= tx('mês', 'month', 'mes') ?></div>
               </div>
               <div class="db-stat-card">
-                <div class="db-stat-label">Atendimentos</div>
+                <div class="db-stat-label"><?= tx('Atendimentos', 'Visits', 'Atenciones') ?></div>
                 <div class="db-stat-value">863</div>
-                <div class="db-stat-tag">▲ +8% mês</div>
+                <div class="db-stat-tag">▲ +8% <?= tx('mês', 'month', 'mes') ?></div>
               </div>
               <div class="db-stat-card">
-                <div class="db-stat-label">Faturamento</div>
+                <div class="db-stat-label"><?= tx('Faturamento', 'Billing', 'Facturación') ?></div>
                 <div class="db-stat-value">R$ 92k</div>
-                <div class="db-stat-tag">▲ +15% mês</div>
+                <div class="db-stat-tag">▲ +15% <?= tx('mês', 'month', 'mes') ?></div>
               </div>
             </div>
-            <!-- Bar chart -->
             <div class="db-chart">
               <div class="db-chart-head">
-                <span class="db-chart-title">Atendimentos por semana</span>
-                <span class="db-chart-link">Ver relatório →</span>
+                <span class="db-chart-title"><?= tx('Atendimentos por semana', 'Visits per week', 'Atenciones por semana') ?></span>
+                <span class="db-chart-link"><?= tx('Ver relatório', 'View report', 'Ver informe') ?> →</span>
               </div>
               <div class="db-bars">
                 <div class="db-bar" style="height:42%"></div>
@@ -208,9 +141,8 @@ if (BASE !== '') {
                 <span class="db-day">D</span>
               </div>
             </div>
-            <!-- Appointments -->
             <div class="db-appts">
-              <div class="db-appts-title">Próximos agendamentos</div>
+              <div class="db-appts-title"><?= tx('Próximos agendamentos', 'Upcoming appointments', 'Próximas citas') ?></div>
               <div class="db-appt-row">
                 <div class="db-appt-left">
                   <div class="db-appt-avatar">M</div>
@@ -218,7 +150,7 @@ if (BASE !== '') {
                 </div>
                 <div class="db-appt-right">
                   <span class="db-appt-time">09:00</span>
-                  <span class="db-appt-type">Consulta</span>
+                  <span class="db-appt-type"><?= tx('Consulta', 'Visit', 'Consulta') ?></span>
                 </div>
               </div>
               <div class="db-appt-row">
@@ -228,7 +160,7 @@ if (BASE !== '') {
                 </div>
                 <div class="db-appt-right">
                   <span class="db-appt-time">09:45</span>
-                  <span class="db-appt-type">Retorno</span>
+                  <span class="db-appt-type"><?= tx('Retorno', 'Follow-up', 'Retorno') ?></span>
                 </div>
               </div>
               <div class="db-appt-row">
@@ -238,7 +170,7 @@ if (BASE !== '') {
                 </div>
                 <div class="db-appt-right">
                   <span class="db-appt-time">10:30</span>
-                  <span class="db-appt-type">Exame</span>
+                  <span class="db-appt-type"><?= tx('Exame', 'Exam', 'Examen') ?></span>
                 </div>
               </div>
             </div>
@@ -250,857 +182,242 @@ if (BASE !== '') {
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     SOBRE — #sobre
+     PROBLEMAS — "seu maior custo..."
      ══════════════════════════════════════════════════════════════ -->
-<section id="sobre" class="sobre">
+<section class="page-section">
   <div class="container">
-    <span class="section-label">Sobre</span>
-    <h2 class="sobre-heading">Um sistema criado para quem vive a rotina da saúde</h2>
+    <span class="section-label"><?= tx('O desafio', 'The challenge', 'El desafío') ?></span>
+    <h2 class="page-section-heading"><?= tx('Seu maior custo pode estar entre um setor e outro.', 'Your biggest cost may be sitting between departments.', 'Su mayor costo puede estar entre un sector y otro.') ?></h2>
+    <p class="page-section-sub"><?= tx('Quando a informação não acompanha o paciente, a equipe repete tarefas, a espera aumenta e o faturamento fica mais vulnerável. A TechSallus organiza a operação em um fluxo conectado, da marcação à análise do resultado.', 'When information does not follow the patient, staff repeat tasks, waiting time grows and billing becomes more vulnerable. TechSallus organizes the operation into a connected flow, from booking to results analysis.', 'Cuando la información no acompaña al paciente, el equipo repite tareas, la espera aumenta y la facturación queda más vulnerable. TechSallus organiza la operación en un flujo conectado, desde la reserva hasta el análisis del resultado.') ?></p>
 
-    <div class="sobre-layout">
-      <div class="sobre-text">
-        <p>
-          Desde 1994, a Techsallus desenvolve e aprimora o TechSallus — um sistema de gestão hospitalar construído com base em décadas de experiência dentro de clínicas, hospitais e laboratórios reais. Não somos uma startup que nunca pisou numa UPA. Conhecemos o fluxo do Pronto-Atendimento, a lógica do Centro Cirúrgico, as regras do faturamento TISS e as exigências dos convênios. Por isso, o sistema faz sentido na prática. O TechSallus é modular: você ativa os módulos que precisa hoje e expande conforme a sua operação cresce.
-        </p>
+    <div class="card-grid card-grid-3">
+      <div class="card">
+        <div class="card-title"><?= tx('Agenda com faltas', 'No-show-prone scheduling', 'Agenda con ausencias') ?></div>
+        <p class="card-desc"><?= tx('Confirmações manuais consomem a equipe e horários ociosos reduzem a capacidade de atendimento.', 'Manual confirmations tie up staff and idle time slots shrink care capacity.', 'Las confirmaciones manuales consumen al equipo y los horarios vacíos reducen la capacidad de atención.') ?></p>
       </div>
-
-      <div class="stat-cards">
-        <div class="stat-card">
-          <div class="stat-num" data-target="30" data-prefix="+">+30</div>
-          <div class="stat-label">anos</div>
-          <div class="stat-sub">desenvolvendo e evoluindo o sistema</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" data-target="9">9</div>
-          <div class="stat-label">módulos</div>
-          <div class="stat-sub">integrados nativamente</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" data-target="7">7</div>
-          <div class="stat-label">estados</div>
-          <div class="stat-sub">com clientes ativos no Brasil</div>
-        </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Filas e demora', 'Queues and delays', 'Filas y demoras') ?></div>
+        <p class="card-desc"><?= tx('Recepção, triagem, consultório e exames desconectados criam espera e pouca visibilidade sobre o fluxo.', 'Disconnected front desk, triage, exam rooms and testing create waiting time and little visibility into flow.', 'Recepción, triaje, consultorio y exámenes desconectados generan espera y poca visibilidad del flujo.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Faturamento vulnerável', 'Vulnerable billing', 'Facturación vulnerable') ?></div>
+        <p class="card-desc"><?= tx('Guias inconsistentes, regras dispersas e glosas aumentam retrabalho e atrasam o ciclo de receita.', 'Inconsistent claims, scattered payer rules and denials increase rework and delay the revenue cycle.', 'Guías inconsistentes, reglas dispersas y glosas aumentan el retrabajo y retrasan el ciclo de ingresos.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Informação fragmentada', 'Fragmented information', 'Información fragmentada') ?></div>
+        <p class="card-desc"><?= tx('Dados clínicos e operacionais em ambientes separados dificultam a continuidade do cuidado.', 'Clinical and operational data living in separate systems make care continuity harder.', 'Datos clínicos y operativos en entornos separados dificultan la continuidad del cuidado.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Perdas em materiais e medicamentos', 'Losses in supplies and medication', 'Pérdidas en materiales y medicamentos') ?></div>
+        <p class="card-desc"><?= tx('Compras, estoque, farmácia e consumo sem integração reduzem rastreabilidade e controle.', 'Disconnected purchasing, inventory, pharmacy and consumption reduce traceability and control.', 'Compras, inventario, farmacia y consumo sin integración reducen trazabilidad y control.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Decisões sem visão de custo', 'Decisions without cost visibility', 'Decisiones sin visión de costos') ?></div>
+        <p class="card-desc"><?= tx('Faturamento mostra movimento, mas não revela margem, ponto de equilíbrio ou rentabilidade.', 'Billing shows volume, but not margin, break-even point or profitability.', 'La facturación muestra movimiento, pero no revela margen, punto de equilibrio ni rentabilidad.') ?></p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     MÓDULOS — #modulos
+     BENEFÍCIOS — "mais eficiência onde o paciente sente..."
      ══════════════════════════════════════════════════════════════ -->
-<section id="modulos" class="modulos">
+<section class="page-section page-section-tint">
   <div class="container">
-    <span class="section-label">Módulos</span>
-    <h2 class="modulos-heading">Tudo que a sua instituição precisa,<br>em um único sistema</h2>
+    <h2 class="page-section-heading"><?= tx('Mais eficiência onde o paciente sente. Mais controle onde a gestão decide.', 'More efficiency where the patient feels it. More control where management decides.', 'Más eficiencia donde el paciente la siente. Más control donde la gestión decide.') ?></h2>
+    <p class="page-section-sub"><?= tx('A tecnologia entra para resolver a rotina: ocupar melhor a agenda, fazer o paciente avançar com fluidez, dar continuidade à informação e proteger o resultado da instituição.', 'Technology steps in to solve the day-to-day: filling the schedule better, moving the patient forward smoothly, giving continuity to information and protecting the institution\'s results.', 'La tecnología entra para resolver la rutina: ocupar mejor la agenda, hacer que el paciente avance con fluidez, dar continuidad a la información y proteger el resultado de la institución.') ?></p>
 
-    <div class="modulos-grid">
-
-      <!-- Agendamento -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <rect x="3" y="5" width="22" height="20" rx="3" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M3 11h22" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M9 3v4M19 3v4" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round"/>
-            <rect x="8" y="15" width="4" height="4" rx="1" fill="#ff7300" opacity="0.7"/>
-            <rect x="16" y="15" width="4" height="4" rx="1" fill="#ff7300" opacity="0.4"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Agendamento</div>
-        <p class="modulo-desc">Agenda múltipla por profissional, convênio, serviço e local. Multi-agendamento de até 10 procedimentos simultâneos.</p>
+    <div class="card-grid card-grid-3">
+      <div class="card">
+        <div class="card-title"><?= tx('Aproveite melhor a agenda', 'Make better use of your schedule', 'Aproveche mejor la agenda') ?></div>
+        <p class="card-desc"><?= tx('Agendamento integrado e confirmações por WhatsApp ajudam a reduzir esforço manual e favorecem uma ocupação mais previsível.', 'Integrated scheduling and WhatsApp confirmations reduce manual effort and support more predictable occupancy.', 'La agenda integrada y las confirmaciones por WhatsApp ayudan a reducir el esfuerzo manual y favorecen una ocupación más previsible.') ?></p>
       </div>
-
-      <!-- Atendimento -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <path d="M14 4C9 4 5 8 5 13s4 9 9 9 9-4 9-9-4-9-9-9z" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M14 9v4l3 3" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="14" cy="13" r="1.5" fill="#ff7300"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Atendimento</div>
-        <p class="modulo-desc">Guias no padrão TISS, ABRAMGE e SUS. Ambientes: Ambulatório, UTI, Pronto-Atendimento, Centro Cirúrgico.</p>
+      <div class="card">
+        <div class="card-title"><?= tx('Acelere a chegada ao atendimento', 'Speed up arrival to care', 'Acelere la llegada a la atención') ?></div>
+        <p class="card-desc"><?= tx('Totem, recepção, distribuição de senhas, chamadas e acolhimento trabalham no mesmo fluxo.', 'Kiosk, front desk, ticket distribution, calling and intake all work within the same flow.', 'Totem, recepción, distribución de turnos, llamadas y acogida trabajan en el mismo flujo.') ?></p>
       </div>
-
-      <!-- Business Intelligence -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <path d="M4 22l6-8 5 4 5-10 4 4" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="10" cy="14" r="2" fill="#ff7300" opacity="0.7"/>
-            <circle cx="15" cy="18" r="2" fill="#ff7300" opacity="0.5"/>
-            <circle cx="20" cy="12" r="2" fill="#ff7300" opacity="0.4"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Business Intelligence</div>
-        <p class="modulo-desc">Análise OLAP com cubos multidimensionais. Dados em tempo real para decisões estratégicas.</p>
+      <div class="card">
+        <div class="card-title"><?= tx('Dê continuidade ao cuidado', 'Give continuity to care', 'Dé continuidad al cuidado') ?></div>
+        <p class="card-desc"><?= tx('Prontuário, laudos, imagens, prescrições e dados assistenciais acompanham a jornada do paciente.', 'Medical records, reports, images, prescriptions and clinical data follow the patient\'s journey.', 'Historia clínica, informes, imágenes, prescripciones y datos asistenciales acompañan el recorrido del paciente.') ?></p>
       </div>
-
-      <!-- Prontuário Eletrônico -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <rect x="6" y="3" width="16" height="22" rx="2" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M10 9h8M10 13h8M10 17h5" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="10" cy="9" r="1" fill="#ff7300"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Prontuário Eletrônico</div>
-        <p class="modulo-desc">Padronizado pela Resolução CFM N.1639-2002. Especialidades automatizadas. Laudos com áudio.</p>
+      <div class="card">
+        <div class="card-title"><?= tx('Fature com mais consistência', 'Bill with more consistency', 'Facture con más consistencia') ?></div>
+        <p class="card-desc"><?= tx('TISS, TUSS, regras de convênios, guias, glosas e repasses dão mais controle ao ciclo de receita.', 'TISS, TUSS, payer rules, claims, denials and physician payouts give more control to the revenue cycle.', 'TISS, TUSS, reglas de convenios, guías, glosas y repartos dan más control al ciclo de ingresos.') ?></p>
       </div>
-
-      <!-- Estoque -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <path d="M4 22V12l10-7 10 7v10H4z" stroke="#ff7300" stroke-width="1.8" stroke-linejoin="round"/>
-            <rect x="10" y="16" width="8" height="6" rx="1" stroke="#ff7300" stroke-width="1.5"/>
-            <path d="M14 13v-2M12 12h4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Estoque</div>
-        <p class="modulo-desc">Controle de materiais e medicamentos. Farmácia Satélite, integração com BRASÍNDICE e SIMPRO.</p>
+      <div class="card">
+        <div class="card-title"><?= tx('Controle suprimentos e medicamentos', 'Control supplies and medication', 'Controle insumos y medicamentos') ?></div>
+        <p class="card-desc"><?= tx('Compras, estoque, farmácia, lotes e dispensação se conectam à operação assistencial.', 'Purchasing, inventory, pharmacy, batches and dispensing connect to clinical operations.', 'Compras, inventario, farmacia, lotes y dispensación se conectan a la operación asistencial.') ?></p>
       </div>
-
-      <!-- Faturamento -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <rect x="4" y="6" width="20" height="16" rx="2" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M4 11h20" stroke="#ff7300" stroke-width="1.5"/>
-            <path d="M9 16h4M9 19h6" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="20" cy="17.5" r="3" fill="#ff7300" opacity="0.25"/>
-            <path d="M19 17.5h2M20 16.5v2" stroke="#ff7300" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Faturamento</div>
-        <p class="modulo-desc">Geração automática de faturas TISS, ABRAMGE e SUS. Controle de glosas integrado ao financeiro.</p>
+      <div class="card">
+        <div class="card-title"><?= tx('Decida com visão de custo e margem', 'Decide with cost and margin visibility', 'Decida con visión de costo y margen') ?></div>
+        <p class="card-desc"><?= tx('Financeiro, BI e Apure Custos transformam dados da operação em informação gerencial.', 'Finance, BI and Apure Custos turn operational data into management information.', 'Financiero, BI y Apure Custos transforman los datos de la operación en información gerencial.') ?></p>
       </div>
-
-      <!-- Financeiro -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <circle cx="14" cy="14" r="10" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M14 8v2M14 18v2M10.5 11.5a2 2 0 013.5 0 2 2 0 003.5 0" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M10.5 16.5a2 2 0 003.5 0 2 2 0 003.5 0" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Financeiro</div>
-        <p class="modulo-desc">Contas a pagar e a receber, conciliação bancária, fluxo de caixa previsto e realizado.</p>
-      </div>
-
-      <!-- Regras de Negócio -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <circle cx="14" cy="14" r="4" stroke="#ff7300" stroke-width="1.8"/>
-            <path d="M14 4v3M14 21v3M4 14h3M21 14h3" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M6.9 6.9l2.1 2.1M18.9 18.9l2.1 2.1M6.9 21.1l2.1-2.1M18.9 9.1l2.1-2.1" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Regras de Negócio</div>
-        <p class="modulo-desc">Configuração de convênios, profissionais e tabelas de preços. Sistema multiempresa.</p>
-      </div>
-
-      <!-- Segurança -->
-      <div class="modulo-card">
-        <div class="modulo-icon">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <path d="M14 3L5 7v7c0 5 4 9 9 10 5-1 9-5 9-10V7L14 3z" stroke="#ff7300" stroke-width="1.8" stroke-linejoin="round"/>
-            <path d="M10 14l3 3 5-5" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="modulo-name">Segurança</div>
-        <p class="modulo-desc">Controle de acesso granular por usuário, auditoria interna completa de todas as operações.</p>
-      </div>
-
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     POR QUÊ TECHSALLUS — #porque
+     JORNADA — "da marcação ao resultado..."
      ══════════════════════════════════════════════════════════════ -->
-<section id="porque" class="porque">
+<section class="page-section">
   <div class="container">
-    <span class="section-label">Por que Techsallus</span>
-    <h2 class="porque-heading">Por que clínicas e hospitais em todo o Brasil escolhem o TechSallus?</h2>
+    <h2 class="page-section-heading"><?= tx('Da marcação ao resultado, cada etapa conversa com a próxima.', 'From booking to results, every step talks to the next.', 'De la reserva al resultado, cada etapa conversa con la siguiente.') ?></h2>
+    <p class="page-section-sub"><?= tx('Em vez de departamentos trabalhando como ilhas, a TechSallus conecta a jornada do paciente às rotinas assistenciais, administrativas e financeiras.', 'Instead of departments working as isolated islands, TechSallus connects the patient journey to clinical, administrative and financial routines.', 'En vez de departamentos trabajando como islas, TechSallus conecta el recorrido del paciente a las rutinas asistenciales, administrativas y financieras.') ?></p>
 
-    <div class="diferenciais-grid">
-
-      <div class="diferencial-item">
-        <svg class="check-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="11" fill="rgba(255,115,0,0.2)"/>
-          <path d="M6.5 11l3 3 6-6" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <div class="diferencial-title">Sistema modular</div>
-          <p class="diferencial-desc">Você paga só pelo que usa e ativa novos módulos quando precisar.</p>
-        </div>
+    <div class="numbered-steps">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <p class="step-text"><strong><?= tx('Agendar e confirmar.', 'Schedule and confirm.', 'Agendar y confirmar.') ?></strong> <?= tx('Organize a agenda e automatize confirmações por WhatsApp, conforme o escopo contratado.', 'Organize the schedule and automate WhatsApp confirmations, according to the contracted scope.', 'Organice la agenda y automatice confirmaciones por WhatsApp, según el alcance contratado.') ?></p>
       </div>
-
-      <div class="diferencial-item">
-        <svg class="check-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="11" fill="rgba(255,115,0,0.2)"/>
-          <path d="M6.5 11l3 3 6-6" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <div class="diferencial-title">Configurado para a sua realidade</div>
-          <p class="diferencial-desc">Sem engessamento, o sistema se adapta ao seu fluxo de trabalho.</p>
-        </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <p class="step-text"><strong><?= tx('Receber e direcionar.', 'Receive and direct.', 'Recibir y dirigir.') ?></strong> <?= tx('Recepção, totem, senhas, chamadas e triagem ajudam o paciente a avançar com mais fluidez.', 'Front desk, kiosk, tickets, calling and triage help the patient move forward more smoothly.', 'Recepción, totem, turnos, llamadas y triaje ayudan al paciente a avanzar con más fluidez.') ?></p>
       </div>
-
-      <div class="diferencial-item">
-        <svg class="check-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="11" fill="rgba(255,115,0,0.2)"/>
-          <path d="M6.5 11l3 3 6-6" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <div class="diferencial-title">Suporte humano, não um chatbot</div>
-          <p class="diferencial-desc">Equipe técnica especializada, segunda a sexta, das 8h às 18h.</p>
-        </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <p class="step-text"><strong><?= tx('Atender e registrar.', 'Care and record.', 'Atender y registrar.') ?></strong> <?= tx('Prontuário, evolução, laudos e protocolos ficam disponíveis no ponto de cuidado.', 'Medical records, progress notes, reports and protocols are available at the point of care.', 'Historia clínica, evolución, informes y protocolos están disponibles en el punto de cuidado.') ?></p>
       </div>
-
-      <div class="diferencial-item">
-        <svg class="check-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="11" fill="rgba(255,115,0,0.2)"/>
-          <path d="M6.5 11l3 3 6-6" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <div class="diferencial-title">30 anos de maturidade</div>
-          <p class="diferencial-desc">Não é versão beta. É um sistema que já passou por todas as mudanças do setor.</p>
-        </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <p class="step-text"><strong><?= tx('Examinar, prescrever e dispensar.', 'Examine, prescribe and dispense.', 'Examinar, prescribir y dispensar.') ?></strong> <?= tx('Imagens, prescrições, farmácia, estoque e rotinas assistenciais se conectam à jornada.', 'Images, prescriptions, pharmacy, inventory and clinical routines connect to the journey.', 'Imágenes, prescripciones, farmacia, inventario y rutinas asistenciales se conectan al recorrido.') ?></p>
       </div>
-
-      <div class="diferencial-item">
-        <svg class="check-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="11" fill="rgba(255,115,0,0.2)"/>
-          <path d="M6.5 11l3 3 6-6" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <div class="diferencial-title">Presente em todo o Brasil</div>
-          <p class="diferencial-desc">São Paulo, Rio de Janeiro, Bahia e mais 4 estados com equipe de suporte local.</p>
-        </div>
+      <div class="step-item">
+        <div class="step-num">5</div>
+        <p class="step-text"><strong><?= tx('Faturar e acompanhar.', 'Bill and track.', 'Facturar y acompañar.') ?></strong> <?= tx('Guias, convênios, TISS, glosas e repasses sustentam um ciclo mais controlado.', 'Claims, payers, TISS, denials and payouts sustain a more controlled cycle.', 'Guías, convenios, TISS, glosas y repartos sostienen un ciclo más controlado.') ?></p>
       </div>
-
+      <div class="step-item">
+        <div class="step-num">6</div>
+        <p class="step-text"><strong><?= tx('Analisar e decidir.', 'Analyze and decide.', 'Analizar y decidir.') ?></strong> <?= tx('Indicadores e custos mostram onde a operação gera resultado e onde precisa agir.', 'Indicators and costs show where the operation generates results and where it needs to act.', 'Indicadores y costos muestran dónde la operación genera resultado y dónde necesita actuar.') ?></p>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     SUPORTE — #suporte
+     SOLUÇÕES POR PERFIL — #solucoes
      ══════════════════════════════════════════════════════════════ -->
-<section id="suporte" class="suporte">
+<section class="page-section page-section-tint" id="solucoes">
   <div class="container">
-    <div class="suporte-inner">
+    <h2 class="page-section-heading"><?= tx('Uma solução para cada nível de complexidade.', 'A solution for every level of complexity.', 'Una solución para cada nivel de complejidad.') ?></h2>
+    <p class="page-section-sub"><?= tx('Comece pelo que sua instituição precisa agora e amplie o escopo sem montar um quebra-cabeça de sistemas e fornecedores.', 'Start with what your institution needs now and expand the scope without piecing together a puzzle of systems and vendors.', 'Comience por lo que su institución necesita ahora y amplíe el alcance sin armar un rompecabezas de sistemas y proveedores.') ?></p>
 
-      <!-- Left text -->
-      <div class="suporte-text">
-        <span class="section-label">Suporte</span>
-        <h2 class="suporte-heading">Suporte técnico que entende da operação</h2>
-        <p class="suporte-desc">
-          Nossa equipe de suporte é formada por profissionais especializados em processos hospitalares. Quando você liga, não precisa explicar o que é uma guia TISS ou um procedimento ABRAMGE — a gente já sabe.
-        </p>
+    <div class="card-grid card-grid-2">
+      <div class="card">
+        <div class="card-title"><?= tx('Consultórios', 'Private practices', 'Consultorios') ?></div>
+        <p class="card-desc"><?= tx('Mais tempo para atender e menos tarefas manuais entre agenda, prontuário, laudos e faturamento.', 'More time to see patients and fewer manual tasks between scheduling, records, reports and billing.', 'Más tiempo para atender y menos tareas manuales entre agenda, historia clínica, informes y facturación.') ?></p>
+        <p style="margin-top:16px"><a href="/consultorios" class="btn-orange"><?= tx('Conhecer solução para consultórios', 'See the solution for private practices', 'Conocer la solución para consultorios') ?></a></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Clínicas e policlínicas', 'Clinics and polyclinics', 'Clínicas y policlínicas') ?></div>
+        <p class="card-desc"><?= tx('Mais fluidez para alto volume de pacientes, procedimentos, exames, estoque, farmácia e gestão.', 'More fluidity for high patient volume, procedures, exams, inventory, pharmacy and management.', 'Más fluidez para alto volumen de pacientes, procedimientos, exámenes, inventario, farmacia y gestión.') ?></p>
+        <p style="margin-top:16px"><a href="/clinicas" class="btn-orange"><?= tx('Conhecer solução para clínicas', 'See the solution for clinics', 'Conocer la solución para clínicas') ?></a></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Hospitais e pronto atendimento', 'Hospitals and urgent care', 'Hospitales y urgencias') ?></div>
+        <p class="card-desc"><?= tx('Coordenação de urgência, internação, centro cirúrgico, prescrição, beira leito e ciclo de receita.', 'Coordination of urgency, admission, surgical center, prescriptions, bedside care and revenue cycle.', 'Coordinación de urgencia, internación, centro quirúrgico, prescripción, cabecera y ciclo de ingresos.') ?></p>
+        <p style="margin-top:16px"><a href="/hospitais" class="btn-orange"><?= tx('Conhecer solução hospitalar', 'See the hospital solution', 'Conocer la solución hospitalaria') ?></a></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Gestão de custos', 'Cost management', 'Gestión de costos') ?></div>
+        <p class="card-desc"><?= tx('Visão de custo, margem e resultado para priorizar melhorias e tomar decisões com mais segurança.', 'Cost, margin and results visibility to prioritize improvements and make decisions with more confidence.', 'Visión de costo, margen y resultado para priorizar mejoras y tomar decisiones con más seguridad.') ?></p>
+        <p style="margin-top:16px"><a href="/apure-custos" class="btn-orange"><?= tx('Conhecer o Apure Custos', 'See Apure Custos', 'Conocer Apure Custos') ?></a></p>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <ul class="suporte-list">
-          <li class="suporte-item">
-            <div class="suporte-dot"></div>
-            <span class="suporte-item-text">Atendimento: segunda a sexta, das 8h às 12h e das 14h às 18h</span>
-          </li>
-          <li class="suporte-item">
-            <div class="suporte-dot"></div>
-            <span class="suporte-item-text">Abertura de chamados online com acompanhamento em tempo real</span>
-          </li>
-          <li class="suporte-item">
-            <div class="suporte-dot"></div>
-            <span class="suporte-item-text">Visitas presenciais para clientes em estados atendidos</span>
-          </li>
+<!-- ══════════════════════════════════════════════════════════════
+     MODULAR / INTEGRADA
+     ══════════════════════════════════════════════════════════════ -->
+<section class="page-section">
+  <div class="container">
+    <h2 class="page-section-heading"><?= tx('Modular por necessidade. Integrada por princípio.', 'Modular by need. Integrated by principle.', 'Modular por necesidad. Integrada por principio.') ?></h2>
+    <p class="page-section-sub"><?= tx('A TechSallus permite compor a solução de acordo com as prioridades da instituição e evoluir à medida que a operação cresce. A modularidade reduz investimento desnecessário; a integração evita que cada novo recurso se transforme em mais uma ilha de informação.', 'TechSallus lets you build the solution according to the institution\'s priorities and evolve as the operation grows. Modularity avoids unnecessary investment; integration keeps every new capability from becoming another island of information.', 'TechSallus permite componer la solución de acuerdo con las prioridades de la institución y evolucionar a medida que la operación crece. La modularidad reduce la inversión innecesaria; la integración evita que cada nuevo recurso se convierta en otra isla de información.') ?></p>
+
+    <div class="list-columns">
+      <div class="list-column">
+        <div class="list-column-title"><?= tx('Comece pela prioridade de hoje', 'Start with today\'s priority', 'Comience por la prioridad de hoy') ?></div>
+        <ul>
+          <li><?= tx('Agenda e absenteísmo', 'Scheduling and no-shows', 'Agenda y ausentismo') ?></li>
+          <li><?= tx('Fluxo de atendimento', 'Care flow', 'Flujo de atención') ?></li>
+          <li><?= tx('Faturamento e glosas', 'Billing and denials', 'Facturación y glosas') ?></li>
+          <li><?= tx('Estoque e farmácia', 'Inventory and pharmacy', 'Inventario y farmacia') ?></li>
         </ul>
-
-        <a href="https://suporte.portalsallus.com.br/" target="_blank" rel="noopener noreferrer" class="btn-orange">
-          Abrir chamado
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
       </div>
-
-      <!-- Right illustration -->
-      <div class="suporte-ilustracao">
-        <svg width="420" height="420" viewBox="0 0 420 420" fill="none" aria-hidden="true">
-          <circle cx="210" cy="210" r="178" fill="#e8f0f9"/>
-          <!-- Centre person -->
-          <circle cx="210" cy="163" r="50" fill="#094a86"/>
-          <path d="M184 163 a26 26 0 0 1 52 0" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <rect x="180" y="159" width="11" height="18" rx="5.5" fill="#ff7300"/>
-          <rect x="229" y="159" width="11" height="18" rx="5.5" fill="#ff7300"/>
-          <path d="M232 176 q6 0 6 8 l-4 4" stroke="#ff7300" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M170 212 q0 18 40 22 q40-4 40-22" fill="#094a86"/>
-          <!-- Dashed connection lines -->
-          <line x1="108" y1="122" x2="165" y2="152" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <line x1="312" y1="122" x2="255" y2="152" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <line x1="94"  y1="210" x2="165" y2="197" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <line x1="326" y1="210" x2="255" y2="197" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <line x1="128" y1="304" x2="178" y2="248" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <line x1="292" y1="304" x2="242" y2="248" stroke="#c8d9ee" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <!-- Top-left card: document -->
-          <rect x="62" y="86" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <line x1="76" y1="104" x2="112" y2="104" stroke="#094a86" stroke-width="2" stroke-linecap="round"/>
-          <line x1="76" y1="114" x2="104" y2="114" stroke="#094a86" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-          <line x1="76" y1="124" x2="108" y2="124" stroke="#094a86" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-          <!-- Top-right card: clock -->
-          <rect x="296" y="86" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <circle cx="327" cy="114" r="17" stroke="#094a86" stroke-width="1.8" opacity="0.7"/>
-          <line x1="327" y1="106" x2="327" y2="114" stroke="#ff7300" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="327" y1="114" x2="334" y2="118" stroke="#ff7300" stroke-width="2.2" stroke-linecap="round"/>
-          <!-- Mid-left card: checkmark -->
-          <rect x="46" y="180" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <circle cx="77" cy="208" r="15" fill="rgba(9,74,134,0.1)"/>
-          <path d="M69 208l6 6 11-11" stroke="#094a86" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Mid-right card: bar chart -->
-          <rect x="312" y="180" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <rect x="322" y="217" width="8" height="10" rx="2" fill="#094a86" opacity="0.4"/>
-          <rect x="334" y="207" width="8" height="20" rx="2" fill="#094a86" opacity="0.6"/>
-          <rect x="346" y="200" width="8" height="27" rx="2" fill="#ff7300"/>
-          <rect x="358" y="210" width="8" height="17" rx="2" fill="#094a86" opacity="0.5"/>
-          <!-- Bottom-left card: star -->
-          <rect x="98" y="272" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <path d="M129 284l3 8.5h9l-7.5 5.5 2.8 8.5L129 301l-7.3 5.5 2.8-8.5-7.5-5.5h9z" fill="#ff7300" opacity="0.9"/>
-          <!-- Bottom-right card: shield -->
-          <rect x="260" y="272" width="62" height="56" rx="10" fill="white" stroke="#e2eaf3" stroke-width="1.5"/>
-          <path d="M291 282l-17 7v10c0 8.5 7.5 15 17 16.5 9.5-1.5 17-8 17-16.5v-10z" stroke="#094a86" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
-          <path d="M283 300l5.5 5.5 9.5-9.5" stroke="#ff7300" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Accent dots -->
-          <circle cx="210" cy="360" r="10" fill="#ff7300" opacity="0.12"/>
-          <circle cx="184" cy="372" r="6" fill="#094a86" opacity="0.1"/>
-          <circle cx="236" cy="372" r="6" fill="#094a86" opacity="0.1"/>
-        </svg>
+      <div class="list-column">
+        <div class="list-column-title"><?= tx('Evolua para uma gestão completa', 'Evolve to full management', 'Evolucione a una gestión completa') ?></div>
+        <ul>
+          <li><?= tx('Prontuário e assistência', 'Medical records and care', 'Historia clínica y asistencia') ?></li>
+          <li><?= tx('Financeiro e repasses', 'Finance and payouts', 'Financiero y repartos') ?></li>
+          <li><?= tx('BI e indicadores', 'BI and dashboards', 'BI e indicadores') ?></li>
+          <li><?= tx('Custos, margem e resultado', 'Costs, margin and results', 'Costos, margen y resultado') ?></li>
+        </ul>
       </div>
-
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     ONDE ESTAMOS — #onde
+     APURE CUSTOS TEASER
      ══════════════════════════════════════════════════════════════ -->
-<section id="onde" class="onde">
+<section class="page-section page-section-dark">
   <div class="container">
-    <div class="onde-header">
-      <span class="section-label" style="display:block;text-align:center">Onde estamos</span>
-      <h2 class="onde-heading">Atendemos clínicas e hospitais em todo o Brasil</h2>
-      <p class="onde-sub">
-        O TechSallus está presente em São Paulo, Rio de Janeiro, Espírito Santo, Rondônia, Maranhão, Sergipe, Alagoas e Bahia. Se você está em outro estado, fale com a gente — estamos em expansão.
-      </p>
+    <h2 class="page-section-heading"><?= tx('Faturamento mostra volume. Custos mostram resultado.', 'Billing shows volume. Costs show results.', 'La facturación muestra volumen. Los costos muestran resultado.') ?></h2>
+    <p class="page-section-sub"><?= tx('O Apure Custos reúne produção, materiais, pessoal, depreciação, custos gerais e repasses médicos para revelar custos e resultados por especialidade, paciente, unidade, produto e procedimento.', 'Apure Custos brings together production, materials, personnel, depreciation, overhead and physician payouts to reveal costs and results by specialty, patient, unit, product and procedure.', 'Apure Custos reúne producción, materiales, personal, depreciación, costos generales y repartos médicos para revelar costos y resultados por especialidad, paciente, unidad, producto y procedimiento.') ?></p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card">
+        <div class="card-title"><?= tx('Mensure custos', 'Measure costs', 'Mida costos') ?></div>
+        <p class="card-desc"><?= tx('Conheça o custo real da operação e acompanhe sua evolução.', 'Know the real cost of the operation and track its evolution.', 'Conozca el costo real de la operación y siga su evolución.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Enxergue o ponto de equilíbrio', 'See your break-even point', 'Visualice el punto de equilibrio') ?></div>
+        <p class="card-desc"><?= tx('Entenda quanto cada unidade, serviço ou especialidade precisa produzir para se sustentar.', 'Understand how much each unit, service or specialty needs to produce to sustain itself.', 'Entienda cuánto necesita producir cada unidad, servicio o especialidad para sostenerse.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Compare resultados', 'Compare results', 'Compare resultados') ?></div>
+        <p class="card-desc"><?= tx('Analise especialidades, pacientes, unidades, produtos e procedimentos sob a mesma lógica.', 'Analyze specialties, patients, units, products and procedures under the same logic.', 'Analice especialidades, pacientes, unidades, productos y procedimientos bajo la misma lógica.') ?></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><?= tx('Avalie investimentos', 'Evaluate investments', 'Evalúe inversiones') ?></div>
+        <p class="card-desc"><?= tx('Use dados de custo e resultado para apoiar expansão, negociação e priorização.', 'Use cost and results data to support expansion, negotiation and prioritization.', 'Use datos de costo y resultado para apoyar expansión, negociación y priorización.') ?></p>
+      </div>
     </div>
 
-    <div id="map-loading" style="display:flex;align-items:center;justify-content:center;gap:12px;height:600px;font-family:'DM Sans',sans-serif;font-size:14px;color:#4a6080;">
-      <div style="width:22px;height:22px;border:2px solid #c8daf0;border-top-color:#094a86;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
-      Carregando mapa...
-    </div>
-    <div id="mapa-brasil"></div>
+    <p style="margin-top:40px"><a href="/apure-custos" class="btn-primary"><?= tx('Conhecer o Apure Custos', 'See Apure Custos', 'Conocer Apure Custos') ?></a></p>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     FORMULÁRIO DE CONTATO — #contato
+     TECNOLOGIA TEASER
      ══════════════════════════════════════════════════════════════ -->
-<section id="contato" class="form-section">
+<section class="page-section">
   <div class="container">
-    <div id="form-section-inner" class="form-layout">
-
-      <!-- Left: form -->
-      <div class="form-container">
-        <span class="form-section-label">Demonstração gratuita</span>
-        <h2 class="form-heading">Quer ver o TechSallus funcionando na prática?</h2>
-        <p class="form-sub">
-          Agende uma demonstração gratuita e veja como o sistema se encaixa no fluxo da sua clínica ou hospital. Em 30 minutos, você entende por que mais de 7 estados já confiam no TechSallus.
-        </p>
-
-        <form id="form-demo" novalidate>
-          <div class="form-field">
-            <label for="nome">Nome completo</label>
-            <input type="text" id="nome" name="nome" placeholder="Seu nome" autocomplete="name"/>
-          </div>
-          <div class="form-field">
-            <label for="instituicao">Instituição</label>
-            <input type="text" id="instituicao" name="instituicao" placeholder="Clínica, hospital, laboratório..."/>
-          </div>
-          <div class="form-field">
-            <label for="cargo">Cargo</label>
-            <input type="text" id="cargo" name="cargo" placeholder="Diretor, Gerente, Médico..."/>
-          </div>
-          <div class="form-field">
-            <label for="email">E-mail</label>
-            <input type="email" id="email" name="email" placeholder="email@clinica.com.br" autocomplete="email"/>
-          </div>
-          <div class="form-field">
-            <label for="whatsapp">WhatsApp</label>
-            <input type="tel" id="whatsapp" name="whatsapp" placeholder="(11) 99999-9999" autocomplete="tel"/>
-          </div>
-          <div class="form-field">
-            <label for="porte">Quantos profissionais de saúde atuam na sua instituição?</label>
-            <select id="porte" name="porte">
-              <option value="" disabled selected>Selecione</option>
-              <option value="1-2">1 – 2</option>
-              <option value="3-9">3 – 9</option>
-              <option value="10-30">10 – 30</option>
-              <option value="31-100">31 – 100</option>
-              <option value="100+">100+</option>
-            </select>
-          </div>
-          <input type="hidden" name="utm_source"   id="utm_source">
-          <input type="hidden" name="utm_medium"   id="utm_medium">
-          <input type="hidden" name="utm_campaign" id="utm_campaign">
-          <!-- Honeypot — invisível para humanos, bots preenchem -->
-          <div style="display:none!important;visibility:hidden;position:absolute;left:-9999px" aria-hidden="true">
-            <input type="text" name="website" tabindex="-1" autocomplete="off">
-          </div>
-          <button type="submit" class="btn-submit">Quero ver uma demonstração gratuita</button>
-        </form>
-      </div>
-
-      <!-- Right: trust panel -->
-      <div class="trust-col">
-        <div class="trust-grid">
-          <div class="trust-stat">
-            <div class="trust-num">+30 anos</div>
-            <div class="trust-sub">de mercado</div>
-          </div>
-          <div class="trust-stat">
-            <div class="trust-num">7 estados</div>
-            <div class="trust-sub">com clientes ativos</div>
-          </div>
-          <div class="trust-stat">
-            <div class="trust-num">9 módulos</div>
-            <div class="trust-sub">integrados</div>
-          </div>
-          <div class="trust-stat">
-            <div class="trust-num">100% cloud</div>
-            <div class="trust-sub">sem instalação local</div>
-          </div>
-        </div>
-
-        <div class="trust-checks">
-          <div class="trust-check">
-            <div class="trust-check-icon">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span>Sem compromisso — cancele quando quiser</span>
-          </div>
-          <div class="trust-check">
-            <div class="trust-check-icon">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span>Demonstração gratuita, sem cartão de crédito</span>
-          </div>
-          <div class="trust-check">
-            <div class="trust-check-icon">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span>Dados protegidos por criptografia HTTPS</span>
-          </div>
-          <div class="trust-check">
-            <div class="trust-check-icon">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span>Conforme LGPD e normas do CFM</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    <h2 class="page-section-heading"><?= tx('Profundidade técnica sem complicar a rotina.', 'Technical depth without complicating the routine.', 'Profundidad técnica sin complicar la rutina.') ?></h2>
+    <p class="page-section-sub"><?= tx('Prontuário eletrônico, faturamento TISS/TUSS, PACS/DICOM, integrações HL7, infraestrutura em nuvem, backups e painéis de BI formam a base técnica da solução. Para a equipe, isso significa menos digitação duplicada, mais continuidade da informação e uma operação mais conectada.', 'Electronic medical records, TISS/TUSS billing, PACS/DICOM, HL7 integrations, cloud infrastructure, backups and BI dashboards form the technical base of the solution. For the team, this means less duplicate data entry, more continuity of information and a more connected operation.', 'Historia clínica electrónica, facturación TISS/TUSS, PACS/DICOM, integraciones HL7, infraestructura en la nube, copias de seguridad y paneles de BI forman la base técnica de la solución. Para el equipo, esto significa menos digitación duplicada, más continuidad de la información y una operación más conectada.') ?></p>
+    <p><a href="/tecnologia" class="btn-orange"><?= tx('Ver tecnologia e integrações', 'See technology and integrations', 'Ver tecnología e integraciones') ?></a></p>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     PLANOS — #planos
+     CTA FINAL
      ══════════════════════════════════════════════════════════════ -->
-<section id="planos" class="planos">
+<section class="cta-bar cta-bar-dark">
   <div class="container">
-    <div class="planos-header">
-      <span class="section-label" style="display:block;text-align:center">Planos</span>
-      <h2 class="planos-heading">Escolha o plano certo para o porte da sua instituição</h2>
-      <p class="planos-sub">Sem taxa de implantação escondida, sem fidelidade obrigatória no primeiro ciclo.</p>
-    </div>
-
-    <div class="planos-grid">
-
-      <!-- Básico -->
-      <div class="plano-card">
-        <div class="plano-name">Básico</div>
-        <div class="plano-desc">Ideal para consultórios e clínicas com até 2 profissionais</div>
-        <div class="plano-price-wrap">
-          <span class="plano-price">R$ 300</span>
-          <span class="plano-period">/mês</span>
-        </div>
-        <div class="plano-features">
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Agenda Múltipla</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Padrão TISS</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Controle Financeiro</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">100 disparos de SMS/mês</span>
-          </div>
-        </div>
-        <a href="#contato" class="btn-plano-outline" data-scroll="contato">Começar agora</a>
-      </div>
-
-      <!-- Padrão (featured) -->
-      <div class="plano-card featured">
-        <div class="plano-badge">Mais contratado</div>
-        <div class="plano-name">Padrão</div>
-        <div class="plano-desc">Para clínicas com equipe de 3 a 9 profissionais</div>
-        <div class="plano-price-wrap">
-          <span class="plano-price">R$ 500</span>
-          <span class="plano-period">/mês</span>
-        </div>
-        <div class="plano-features">
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Tudo do Básico</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Gestão de Glosa</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Relatório Personalizado</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Confirmação Automática</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Agendamento Online</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(255,115,0,0.25)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#ff7300" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">300 disparos SMS/mês</span>
-          </div>
-        </div>
-        <a href="#contato" class="btn-plano-primary" data-scroll="contato">Quero este plano</a>
-      </div>
-
-      <!-- Premium -->
-      <div class="plano-card">
-        <div class="plano-name">Premium</div>
-        <div class="plano-desc">Para hospitais e instituições com 10 ou mais profissionais</div>
-        <div class="plano-price-wrap">
-          <div class="plano-price-consult">Sob consulta</div>
-          <div class="plano-price-consult-sub">Feito para a sua realidade</div>
-        </div>
-        <div class="plano-features">
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Tudo do Padrão</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Usuários ilimitados</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Pesquisa de satisfação</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">500 disparos SMS</span>
-          </div>
-          <div class="plano-feature">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="rgba(9,74,134,0.1)"/>
-              <path d="M4.5 8l2.5 2.5 4.5-4" stroke="#094a86" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="plano-feature-text">Gestor dedicado</span>
-          </div>
-        </div>
-        <a href="#contato" class="btn-plano-outline" data-scroll="contato">Falar com um especialista</a>
-      </div>
-
+    <h2 class="cta-bar-heading"><?= tx('Qual gargalo mais impacta sua operação hoje?', 'Which bottleneck impacts your operation most today?', '¿Qué cuello de botella impacta más su operación hoy?') ?></h2>
+    <p class="page-section-sub" style="margin:-8px auto 24px"><?= tx('Faltas, filas, glosas, falta de controle sobre materiais ou pouca visibilidade de custos? Comece pela prioridade mais urgente e entenda quais módulos fazem sentido para o momento atual da sua instituição.', 'No-shows, queues, denials, lack of control over supplies or little visibility into costs? Start with the most urgent priority and understand which modules make sense for your institution right now.', '¿Ausencias, filas, glosas, falta de control sobre materiales o poca visibilidad de costos? Comience por la prioridad más urgente y entienda qué módulos tienen sentido para el momento actual de su institución.') ?></p>
+    <div class="cta-bar-actions">
+      <a href="/contato" class="btn-primary"><?= tx('Falar com um especialista', 'Talk to a specialist', 'Hablar con un especialista') ?></a>
     </div>
   </div>
 </section>
-
-<!-- ══════════════════════════════════════════════════════════════
-     FOOTER — #blog
-     ══════════════════════════════════════════════════════════════ -->
-<footer id="blog" class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-
-      <!-- Col 1: Brand -->
-      <div>
-        <img src="/assets/img/logo.png" alt="Techsallus" class="footer-logo"/>
-        <p class="footer-tagline">Sistema de gestão hospitalar desde 1994</p>
-      </div>
-
-      <!-- Col 2: Sistema links -->
-      <div>
-        <div class="footer-col-title">Sistema</div>
-        <div class="footer-links">
-          <a href="#sobre" data-scroll="sobre">Sistema</a>
-          <a href="#modulos" data-scroll="modulos">Módulos</a>
-          <a href="#planos"  data-scroll="planos">Planos</a>
-          <a href="#suporte" data-scroll="suporte">Suporte</a>
-          <a href="/blog/">Blog</a>
-        </div>
-      </div>
-
-      <!-- Col 3: Contact (no WhatsApp) -->
-      <div>
-        <div class="footer-col-title">Contato</div>
-        <div class="footer-contact">
-          <!-- E-mail -->
-          <div class="footer-contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="M2 7l10 7 10-7"/>
-            </svg>
-            <a href="mailto:faleconosco@techsallus.com.br">faleconosco@techsallus.com.br</a>
-          </div>
-          <!-- Address -->
-          <div class="footer-contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-              <circle cx="12" cy="9" r="2.5"/>
-            </svg>
-            <span>Rua Ewerton Visco, 290 · Ed. Boulevard Side, Salas 1601 · Salvador, Bahia</span>
-          </div>
-          <!-- Hours -->
-          <div class="footer-contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7300" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="9"/>
-              <path d="M12 7v5l3 3"/>
-            </svg>
-            <span>Segunda a sexta, 8h às 18h</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Col 4: States -->
-      <div>
-        <div class="footer-col-title">Presente em</div>
-        <div class="footer-states">
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">São Paulo</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Rio de Janeiro</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Bahia</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Espírito Santo</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Rondônia</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Maranhão</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Sergipe</span></div>
-          <div class="footer-state"><div class="footer-state-dot"></div><span class="footer-state-name">Alagoas</span></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Bottom bar -->
-    <div class="footer-bottom">
-      <span class="footer-copy">© 2025 Techsallus. Todos os direitos reservados.</span>
-    </div>
-  </div>
-</footer>
 
 </main>
 
-<!-- ══════════════════════════════════════════════════════════════
-     WHATSAPP FLOAT
-     ══════════════════════════════════════════════════════════════ -->
-<a href="https://wa.me/557181299624?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20o%20sistema%20de%20voc%C3%AAs"
-   target="_blank"
-   rel="noopener noreferrer"
-   class="whatsapp-float"
-   aria-label="Fale conosco pelo WhatsApp">
-  <svg viewBox="0 0 24 24" fill="white" width="26" height="26" aria-hidden="true">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-    <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.974-1.304A9.963 9.963 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="none" stroke="white" stroke-width="1.5"/>
-  </svg>
-</a>
+<?php include __DIR__ . '/_partials/footer.php'; ?>
 
-<!-- ══════════════════════════════════════════════════════════════
-     SCRIPTS
-     ══════════════════════════════════════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="/assets/js/main.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
-(function () {
-  const ATIVOS = new Set(['SP','RJ','ES','RO','MA','SE','AL','BA']);
-
-  const ESTADOS = {
-    '11':{ uf:'RO', latlng:[-10.9,-61.9] },
-    '12':{ uf:'AC', latlng:[-9.0, -70.8] },
-    '13':{ uf:'AM', latlng:[-3.4, -65.8] },
-    '14':{ uf:'RR', latlng:[2.0,  -61.4] },
-    '15':{ uf:'PA', latlng:[-3.4, -52.3] },
-    '16':{ uf:'AP', latlng:[1.4,  -51.8] },
-    '17':{ uf:'TO', latlng:[-10.2,-48.3] },
-    '22':{ uf:'PI', latlng:[-7.7, -42.7] },
-    '23':{ uf:'CE', latlng:[-5.2, -39.3] },
-    '24':{ uf:'RN', latlng:[-5.8, -36.6] },
-    '25':{ uf:'PB', latlng:[-7.1, -36.8] },
-    '26':{ uf:'PE', latlng:[-8.3, -37.9] },
-    '31':{ uf:'MG', latlng:[-18.5,-44.6] },
-    '41':{ uf:'PR', latlng:[-24.6,-51.5] },
-    '42':{ uf:'SC', latlng:[-27.2,-50.2] },
-    '43':{ uf:'RS', latlng:[-30.0,-53.2] },
-    '50':{ uf:'MS', latlng:[-20.5,-54.8] },
-    '51':{ uf:'MT', latlng:[-12.6,-56.1] },
-    '52':{ uf:'GO', latlng:[-15.9,-49.8] },
-    '53':{ uf:'DF', latlng:[-15.8,-47.9] },
-    '21':{ uf:'MA', latlng:[-2.2,  -44.302] },
-    '27':{ uf:'AL', latlng:[-9.0,  -36.8]   },
-    '28':{ uf:'SE', latlng:[-10.2, -37.4]   },
-    '29':{ uf:'BA', latlng:[-12.2, -41.7]   },
-    '32':{ uf:'ES', latlng:[-19.1, -40.7]   },
-    '33':{ uf:'RJ', latlng:[-21.7, -42.7]   },
-    '35':{ uf:'SP', latlng:[-21.6, -48.9]   },
-    '11x':{ uf:'RO', latlng:[-8.0, -63.900] },
-  };
-
-  const CAPITAIS = {
-    SP:[-23.548,-46.633], RJ:[-22.906,-43.172],
-    ES:[-20.319,-40.337], RO:[-8.761, -63.900],
-    MA:[-2.529, -44.302], SE:[-10.947,-37.073],
-    AL:[-9.665, -35.735], BA:[-12.971,-38.501],
-  };
-
-  const IBGE_UF = {
-    '11':'RO','12':'AC','13':'AM','14':'RR','15':'PA','16':'AP','17':'TO',
-    '21':'MA','22':'PI','23':'CE','24':'RN','25':'PB','26':'PE','27':'AL',
-    '28':'SE','29':'BA','31':'MG','32':'ES','33':'RJ','35':'SP',
-    '41':'PR','42':'SC','43':'RS','50':'MS','51':'MT','52':'GO','53':'DF'
-  };
-
-  const map = L.map('mapa-brasil', {
-    zoomControl:false, scrollWheelZoom:false,
-    doubleClickZoom:false, touchZoom:false,
-    dragging:false, keyboard:false, attributionControl:false,
-  });
-
-  fetch('https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?resolucao=1&formato=application/vnd.geo+json')
-    .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
-    .then(geo => {
-      document.getElementById('map-loading').style.display = 'none';
-      document.getElementById('mapa-brasil').style.display = 'block';
-
-      const layer = L.geoJSON(geo, {
-        style: f => {
-          const cod  = String(f.properties?.codarea || '');
-          const uf   = IBGE_UF[cod];
-          const ativo = uf && ATIVOS.has(uf);
-          return {
-            fillColor:   ativo ? '#094a86' : '#c8daf0',
-            fillOpacity: 1,
-            color:       '#ffffff',
-            weight:      1.5,
-          };
-        },
-        onEachFeature: (f, lyr) => {
-          const uf = IBGE_UF[String(f.properties?.codarea||'')];
-          if (ATIVOS.has(uf)) {
-            lyr.on('mouseover', function(){ this.setStyle({fillColor:'#073d70'}); });
-            lyr.on('mouseout',  function(){ this.setStyle({fillColor:'#094a86'}); });
-          }
-        }
-      }).addTo(map);
-
-      const isMobile = window.innerWidth <= 768;
-      map.fitBounds(layer.getBounds(), { padding: isMobile ? [40,20] : [24,24] });
-
-      Object.values(ESTADOS).forEach(info => {
-        const ativo = ATIVOS.has(info.uf);
-        const icon = L.divIcon({
-          className: '',
-          html: `<span class="sigla-label ${ativo ? 'sigla-ativo' : 'sigla-inativo'}">${info.uf}</span>`,
-          iconSize:   [28, 16],
-          iconAnchor: [14, 8],
-        });
-        L.marker(info.latlng, { icon, interactive:false, keyboard:false }).addTo(map);
-      });
-
-      Object.entries(CAPITAIS).forEach(([uf, ll]) => {
-        L.circleMarker(ll, {
-          radius:14, fillColor:'#ff7300', color:'transparent',
-          fillOpacity:0.22, interactive:false,
-        }).addTo(map);
-        L.circleMarker(ll, {
-          radius:6, fillColor:'#ff7300', color:'#ffffff',
-          weight:2.5, fillOpacity:1, interactive:false,
-        }).addTo(map);
-      });
-    })
-    .catch(err => {
-      document.getElementById('map-loading').innerHTML =
-        '<span style="color:#a32d2d;font-family:\'DM Sans\',sans-serif">Erro ao carregar o mapa.</span>';
-    });
-})();
-</script>
-
+<script src="/assets/js/main.js?v=20260731a"></script>
 </body>
 </html>

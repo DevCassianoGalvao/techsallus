@@ -7,6 +7,8 @@
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../core/Auth.php';
+require_once __DIR__ . '/../core/Security.php';
+Security::headers();
 if (!Auth::check()) { http_response_code(401); echo json_encode(['error' => 'Unauthorized']); exit; }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -18,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../core/OpenAI.php';
 
 $body  = json_decode(file_get_contents('php://input'), true);
+Security::requireCsrfJson($body);
 $topic = trim($body['topic'] ?? '');
 $cat   = trim($body['cat']   ?? 'Gestão');
 

@@ -13,11 +13,23 @@
   }
 
   function postJSON(url, data) {
-    return fetch(url, {
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    return fetch(appUrl(url), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf ? csrf.content : '',
+      },
       body: JSON.stringify(data),
     }).then(function (r) { return r.json(); });
+  }
+
+  function appUrl(path) {
+    if (/^https?:\/\//.test(path)) return path;
+    var script = document.querySelector('script[src*="/assets/js/admin.js"]');
+    var src = script ? script.getAttribute('src') : '';
+    var base = src ? src.replace(/\/assets\/js\/admin\.js.*$/, '') : '';
+    return base + '/' + String(path).replace(/^\/+/, '');
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -32,14 +44,26 @@
     currentLeadId = cardEl.dataset.id;
 
     /* Fill detail fields */
-    setText('modal-title-text', cardEl.dataset.nome);
-    setText('modal-sub-text',   cardEl.dataset.inst);
-    setText('modal-cargo',      cardEl.dataset.cargo);
-    setText('modal-porte',      cardEl.dataset.porte);
-    setText('modal-email',      cardEl.dataset.email);
-    setText('modal-whatsapp',   cardEl.dataset.wa);
-    setText('modal-status',     cardEl.dataset.status);
-    setText('modal-data',       cardEl.dataset.data);
+    setText('modal-title-text',     cardEl.dataset.nome);
+    setText('modal-sub-text',       cardEl.dataset.inst);
+    setText('modal-perfil',         cardEl.dataset.perfil);
+    setText('modal-desafio',        cardEl.dataset.desafio);
+    setText('modal-cargo',          cardEl.dataset.cargo);
+    setText('modal-tipo',           cardEl.dataset.tipo);
+    setText('modal-cidade-estado',
+      (cardEl.dataset.cidade || '—') + ' / ' + (cardEl.dataset.estado || '—'));
+    setText('modal-porte',          cardEl.dataset.porte);
+    setText('modal-email',          cardEl.dataset.email);
+    setText('modal-whatsapp',       cardEl.dataset.wa);
+    setText('modal-status',         cardEl.dataset.status);
+    setText('modal-data',           cardEl.dataset.data);
+
+    var mensagemRow = document.getElementById('modal-mensagem-row');
+    var mensagem     = cardEl.dataset.mensagem || '';
+    if (mensagemRow) {
+      mensagemRow.style.display = mensagem ? '' : 'none';
+      setText('modal-mensagem', mensagem);
+    }
 
     var utmRow = document.getElementById('modal-utm-row');
     var utm    = cardEl.dataset.utm || '';
@@ -105,6 +129,7 @@
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.kanban-card-btn');
     if (btn) {
+      if (btn.classList.contains('card-btn-archive')) return;
       var card = btn.closest('.kanban-card');
       if (card) openModal(card);
     }
@@ -228,6 +253,33 @@
       if (empty) empty.style.display = count > 0 ? 'none' : '';
     });
   }
+
+  window.arquivarLead = function (id) {
+    if (!confirm('Arquivar este contato? Ele continuará visível em Contatos.')) return;
+
+    var fd = new FormData();
+    fd.append('action', 'arquivar');
+    fd.append('id', id);
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    if (csrf) fd.append('csrf_token', csrf.content);
+
+    fetch(appUrl('/api/crm.php'), { method: 'POST', body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          var card = document.querySelector('.kanban-card[data-id="' + id + '"]');
+          if (card) {
+            card.style.transition = 'opacity .3s, transform .3s';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(function () {
+              card.remove();
+              updateColCounts();
+            }, 300);
+          }
+        }
+      });
+  };
 
   if (typeof Sortable !== 'undefined') {
     document.querySelectorAll('.kanban-col-body').forEach(function (colBody) {

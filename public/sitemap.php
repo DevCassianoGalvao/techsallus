@@ -4,6 +4,9 @@
    Accessible at: /sitemap.xml (via .htaccess rewrite)
    ───────────────────────────────────────────────────────────── */
 $rootDir = dirname(__DIR__);
+if (!file_exists($rootDir . '/core/Env.php')) {
+    $rootDir = __DIR__;
+}
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 Env::load($rootDir . '/.env');
@@ -29,6 +32,51 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     <loc><?= $baseUrl ?>/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/resultados</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/consultorios</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/clinicas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/hospitais</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/apure-custos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/tecnologia</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/sobre</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/contato</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc><?= $baseUrl ?>/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc><?= $baseUrl ?>/blog/</loc>

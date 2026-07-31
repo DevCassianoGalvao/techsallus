@@ -8,6 +8,7 @@ $rootDir = dirname(__DIR__);
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Auth.php';
+require_once $rootDir . '/core/Schema.php';
 Env::load($rootDir . '/.env');
 Auth::require();
 
@@ -20,6 +21,12 @@ $dbOk        = false;
 $totalLeads  = 0;
 $byStatus    = [];
 $byPorte     = [];
+$byCargo     = [];
+$byCidade    = [];
+$byEstado    = [];
+$byOrigem    = [];
+$byCampanha  = [];
+$byUtmCombo  = [];
 $recentLeads = [];
 $statusMap   = [
     'novo'        => ['label' => 'Novo',        'n' => 0],
@@ -29,6 +36,8 @@ $statusMap   = [
 ];
 
 try {
+    Schema::ensureLeadTrackingColumns();
+
     $totalLeads = (int)(DB::fetchOne("SELECT COUNT(*) AS n FROM leads")['n'] ?? 0);
 
     $rows = DB::fetchAll("SELECT status, COUNT(*) AS n FROM leads GROUP BY status");
@@ -42,8 +51,42 @@ try {
         "SELECT porte, COUNT(*) AS n FROM leads GROUP BY porte ORDER BY n DESC LIMIT 8"
     );
 
+    $byCargo = DB::fetchAll(
+        "SELECT cargo, COUNT(*) AS n FROM leads WHERE cargo IS NOT NULL AND cargo != '' GROUP BY cargo ORDER BY n DESC LIMIT 8"
+    );
+
+    $byCidade = DB::fetchAll(
+        "SELECT cidade, estado, COUNT(*) AS n FROM leads WHERE cidade IS NOT NULL AND cidade != '' GROUP BY cidade, estado ORDER BY n DESC LIMIT 8"
+    );
+
+    $byEstado = DB::fetchAll(
+        "SELECT estado, COUNT(*) AS n FROM leads WHERE estado IS NOT NULL AND estado != '' GROUP BY estado ORDER BY n DESC LIMIT 8"
+    );
+
+    $byOrigem = DB::fetchAll(
+        "SELECT COALESCE(NULLIF(utm_source, ''), 'Sem UTM') AS origem, COUNT(*) AS n
+         FROM leads GROUP BY origem ORDER BY n DESC LIMIT 8"
+    );
+
+    $byCampanha = DB::fetchAll(
+        "SELECT COALESCE(NULLIF(utm_campaign, ''), 'Sem campanha') AS campanha, COUNT(*) AS n
+         FROM leads GROUP BY campanha ORDER BY n DESC LIMIT 8"
+    );
+
+    $byUtmCombo = DB::fetchAll(
+        "SELECT
+            COALESCE(NULLIF(utm_source, ''), 'Sem UTM') AS origem,
+            COALESCE(NULLIF(utm_medium, ''), '-') AS midia,
+            COALESCE(NULLIF(utm_campaign, ''), '-') AS campanha,
+            COUNT(*) AS n
+         FROM leads
+         GROUP BY origem, midia, campanha
+         ORDER BY n DESC
+         LIMIT 8"
+    );
+
     $recentLeads = DB::fetchAll(
-        "SELECT id, nome, instituicao, porte, status, criado_em FROM leads ORDER BY criado_em DESC LIMIT 8"
+        "SELECT id, nome, instituicao, cargo, cidade, estado, porte, status, utm_source, utm_campaign, criado_em FROM leads ORDER BY criado_em DESC LIMIT 8"
     );
 
     $dbOk = true;
@@ -147,6 +190,108 @@ include __DIR__ . '/_header.php';
       <?php endif; ?>
     </div>
 
+    <div class="admin-card">
+      <h2 class="admin-card-title">Cargos que mais procuram</h2>
+      <?php if (empty($byCargo)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byCargo as $row): ?>
+          <div class="pipeline-item">
+            <div class="pipeline-label">
+              <span><?= htmlspecialchars($row['cargo']) ?></span>
+              <span><?= (int)$row['n'] ?></span>
+            </div>
+            <div class="pipeline-bar">
+              <div class="pipeline-bar-fill" style="background:#ff7300;width:<?= barWidth((int)$row['n'], $totalLeads) ?>%"></div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-card-title">Estados com mais leads</h2>
+      <?php if (empty($byEstado)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byEstado as $row): ?>
+          <div class="metric-row">
+            <span><?= htmlspecialchars($row['estado']) ?></span>
+            <strong><?= (int)$row['n'] ?></strong>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-card-title">Cidades com mais leads</h2>
+      <?php if (empty($byCidade)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byCidade as $row): ?>
+          <div class="metric-row">
+            <span><?= htmlspecialchars($row['cidade'] . ' / ' . $row['estado']) ?></span>
+            <strong><?= (int)$row['n'] ?></strong>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-card-title">Origem dos leads</h2>
+      <?php if (empty($byOrigem)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byOrigem as $row): ?>
+          <div class="pipeline-item">
+            <div class="pipeline-label">
+              <span><?= htmlspecialchars($row['origem']) ?></span>
+              <span><?= (int)$row['n'] ?></span>
+            </div>
+            <div class="pipeline-bar">
+              <div class="pipeline-bar-fill" style="background:#2563eb;width:<?= barWidth((int)$row['n'], $totalLeads) ?>%"></div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-card-title">Campanhas com mais leads</h2>
+      <?php if (empty($byCampanha)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byCampanha as $row): ?>
+          <div class="pipeline-item">
+            <div class="pipeline-label">
+              <span><?= htmlspecialchars($row['campanha']) ?></span>
+              <span><?= (int)$row['n'] ?></span>
+            </div>
+            <div class="pipeline-bar">
+              <div class="pipeline-bar-fill" style="background:#059669;width:<?= barWidth((int)$row['n'], $totalLeads) ?>%"></div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <div class="admin-card">
+      <h2 class="admin-card-title">Combinações UTM</h2>
+      <?php if (empty($byUtmCombo)): ?>
+        <p class="admin-muted">Nenhum dado ainda.</p>
+      <?php else: ?>
+        <?php foreach ($byUtmCombo as $row): ?>
+          <div class="metric-row metric-row-stack">
+            <span>
+              <strong><?= htmlspecialchars($row['origem']) ?></strong>
+              <small><?= htmlspecialchars($row['midia'] . ' / ' . $row['campanha']) ?></small>
+            </span>
+            <strong><?= (int)$row['n'] ?></strong>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
   </div>
 
   <!-- Recent leads table -->
@@ -161,8 +306,11 @@ include __DIR__ . '/_header.php';
             <tr>
               <th>Nome</th>
               <th>Instituição</th>
+              <th>Cargo</th>
+              <th>Cidade/UF</th>
               <th>Porte</th>
               <th>Status</th>
+              <th>UTM</th>
               <th>Data</th>
               <th></th>
             </tr>
@@ -172,10 +320,13 @@ include __DIR__ . '/_header.php';
               <tr>
                 <td class="td-nome"><?= htmlspecialchars($lead['nome']) ?></td>
                 <td><?= htmlspecialchars($lead['instituicao']) ?></td>
+                <td><?= htmlspecialchars($lead['cargo'] ?? '-') ?></td>
+                <td><?= htmlspecialchars(($lead['cidade'] ?? '-') . ' / ' . ($lead['estado'] ?? '-')) ?></td>
                 <td><?= htmlspecialchars($lead['porte']) ?></td>
                 <td><span class="badge badge-<?= $lead['status'] ?>"><?= $lead['status'] ?></span></td>
+                <td><?= htmlspecialchars(($lead['utm_source'] ?: '-') . ' / ' . ($lead['utm_campaign'] ?: '-')) ?></td>
                 <td><?= date('d/m/Y', strtotime($lead['criado_em'])) ?></td>
-                <td><a href="/admin/crm.php" class="table-action-link">Ver CRM →</a></td>
+                <td><a href="/admin/crm.php" class="table-action-link">Ver Kanban →</a></td>
               </tr>
             <?php endforeach; ?>
           </tbody>

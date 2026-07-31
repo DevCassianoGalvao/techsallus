@@ -1,12 +1,12 @@
 <?php
 
+require_once __DIR__ . '/Security.php';
+
 class Auth
 {
     public static function start(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Security::startSession();
     }
 
     public static function login(array $usuario): void
@@ -34,7 +34,7 @@ class Auth
     public static function require(): void
     {
         if (!self::check()) {
-            header('Location: /admin/login.php');
+            header('Location: ' . Security::url('/admin/login.php'));
             exit;
         }
     }

@@ -1,8 +1,16 @@
 <?php
 
 $rootDir = dirname(__DIR__);
+if (!file_exists($rootDir . '/core/Env.php')) {
+    $rootDir = __DIR__;
+}
 require_once $rootDir . '/core/Env.php';
 Env::load($rootDir . '/.env');
+
+if (Env::get('INSTALL_ENABLED', 'false') !== 'true') {
+    http_response_code(404);
+    exit('Instalador desativado.');
+}
 
 $results = [];
 $error   = null;
@@ -68,15 +76,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 `id`            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 `nome`          VARCHAR(150) NOT NULL,
                 `instituicao`   VARCHAR(200) NOT NULL,
+                `tipo_instituicao` VARCHAR(100) DEFAULT NULL,
                 `cargo`         VARCHAR(100) NOT NULL,
                 `email`         VARCHAR(150) NOT NULL,
                 `whatsapp`      VARCHAR(20)  NOT NULL,
                 `porte`         VARCHAR(50)  NOT NULL,
-                `status`        ENUM('novo','contato','proposta','fechamento') NOT NULL DEFAULT 'novo',
+                `cidade`        VARCHAR(120) DEFAULT NULL,
+                `estado`        CHAR(2) DEFAULT NULL,
+                `status`        ENUM('novo','contato','proposta','fechamento','arquivado') NOT NULL DEFAULT 'novo',
                 `notas`         TEXT,
                 `utm_source`    VARCHAR(100) DEFAULT NULL,
                 `utm_medium`    VARCHAR(100) DEFAULT NULL,
                 `utm_campaign`  VARCHAR(100) DEFAULT NULL,
+                `utm_term`      VARCHAR(150) DEFAULT NULL,
+                `utm_content`   VARCHAR(150) DEFAULT NULL,
                 `ip_origem`     VARCHAR(45)  DEFAULT NULL,
                 `criado_em`     DATETIME DEFAULT CURRENT_TIMESTAMP,
                 `atualizado_em` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -85,6 +98,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
         $results[] = ['ok', 'Tabela leads criada'];
+
+        foreach ([
+            'tipo_instituicao VARCHAR(100) DEFAULT NULL AFTER instituicao',
+            'cidade VARCHAR(120) DEFAULT NULL AFTER porte',
+            'estado CHAR(2) DEFAULT NULL AFTER cidade',
+            'utm_term VARCHAR(150) DEFAULT NULL AFTER utm_campaign',
+            'utm_content VARCHAR(150) DEFAULT NULL AFTER utm_term',
+        ] as $col) {
+            $colName = explode(' ', $col)[0];
+            $exists = $pdo->query("SHOW COLUMNS FROM `leads` LIKE '{$colName}'")->rowCount();
+            if (!$exists) {
+                $pdo->exec("ALTER TABLE `leads` ADD COLUMN {$col}");
+            }
+        }
+        $pdo->exec("ALTER TABLE `leads` MODIFY `status` ENUM('novo','contato','proposta','fechamento','arquivado') NOT NULL DEFAULT 'novo'");
+        $results[] = ['ok', 'Colunas de leads verificadas'];
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `lead_notas` (
@@ -104,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 `lead_id`    INT UNSIGNED NOT NULL,
                 `usuario_id` INT UNSIGNED DEFAULT NULL,
-                `tipo`       ENUM('criacao','mover','nota') NOT NULL,
+                `tipo`       ENUM('criacao','mover','nota','movimentacao') NOT NULL,
                 `descricao`  VARCHAR(300) NOT NULL,
                 `criado_em`  DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (`lead_id`)    REFERENCES `leads`(`id`)    ON DELETE CASCADE,
@@ -112,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INDEX `idx_lead_id` (`lead_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
+        $pdo->exec("ALTER TABLE `lead_historico` MODIFY `tipo` ENUM('criacao','mover','nota','movimentacao') NOT NULL");
         $results[] = ['ok', 'Tabela lead_historico criada'];
 
         $pdo->exec("
@@ -167,6 +197,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
         $results[] = ['ok', 'Tabela scripts_injecao criada'];
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `configuracoes` (
+                `chave`        VARCHAR(100) PRIMARY KEY,
+                `valor`        TEXT DEFAULT NULL,
+                `atualizado_em` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+        $results[] = ['ok', 'Tabela configuracoes criada'];
 
         $results[] = ['success', '✓ Instalação concluída! Apague install.php antes de ir para produção.'];
 

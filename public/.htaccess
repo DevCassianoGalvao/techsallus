@@ -1,0 +1,32 @@
+# TechSallus — Apache (vhost techsallus.local, docroot = public/)
+# HTTPS e www redirect DESATIVADOS para desenvolvimento local
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Sitemap dinâmico
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # Blog: /blog/meu-slug → artigo.php
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^blog/([a-z0-9-]+)/?$ blog/artigo.php?slug=$1 [L,QSA]
+
+  # Clean URLs: /consultorios → consultorios.php (any top-level page)
+  RewriteCond %{REQUEST_FILENAME}.php -f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^([a-z0-9-]+)/?$ $1.php [L]
+</IfModule>
+
+Options -Indexes
+
+ErrorDocument 404 /404.php
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+<FilesMatch "\.(env|log|sql|gitignore)$">
+  Require all denied
+</FilesMatch>

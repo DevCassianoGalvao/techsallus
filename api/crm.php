@@ -15,7 +15,9 @@ $rootDir = dirname(__DIR__);
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Auth.php';
+require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
+Security::headers();
 
 /* Auth guard */
 Auth::start();
@@ -32,9 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-/* Parse JSON body */
-$input  = json_decode(file_get_contents('php://input'), true) ?? [];
+/* Parse JSON body or FormData body */
+$input  = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $action = trim($input['action'] ?? '');
+Security::requireCsrfJson($input);
 
 $allowedStatus = ['novo', 'contato', 'proposta', 'fechamento'];
 
@@ -83,6 +86,30 @@ switch ($action) {
             echo json_encode(['ok' => true]);
         } catch (Exception $e) {
             error_log('CRM mover: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'erro' => 'Erro interno']);
+        }
+        break;
+
+    /* ── arquivar ────────────────────────────────────────────── */
+    case 'arquivar':
+        $id = (int)($input['id'] ?? 0);
+
+        if (!$id) {
+            http_response_code(422);
+            echo json_encode(['ok' => false]);
+            exit;
+        }
+
+        try {
+            DB::query("UPDATE leads SET status = 'arquivado', atualizado_em = NOW() WHERE id = ?", [$id]);
+
+            $userId = (int)(Auth::user()['id'] ?? 0) ?: null;
+            gravarHistorico($id, $userId, 'mover', 'Lead arquivado');
+
+            echo json_encode(['ok' => true]);
+        } catch (Exception $e) {
+            error_log('CRM arquivar: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'erro' => 'Erro interno']);
         }

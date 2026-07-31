@@ -6,35 +6,41 @@ $rootDir = dirname(__DIR__);
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Auth.php';
+require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
+Security::headers();
 
 Auth::start();
 if (Auth::check()) {
-    header('Location: /admin/');
+    header('Location: ' . Security::url('/admin/'));
     exit;
 }
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email    = trim($_POST['email']    ?? '');
-    $password =      $_POST['password'] ?? '';
+    if (!Security::verifyCsrf()) {
+        $error = 'Sessao expirada. Recarregue a pagina e tente novamente.';
+    } else {
+        $email    = trim($_POST['email']    ?? '');
+        $password =      $_POST['password'] ?? '';
 
-    if ($email && $password) {
-        try {
-            $usuario = DB::fetchOne(
-                "SELECT id, nome, email, senha_hash FROM usuarios WHERE email = ? LIMIT 1",
-                [$email]
-            );
-            if ($usuario && password_verify($password, $usuario['senha_hash'])) {
-                Auth::login($usuario);
-                header('Location: /admin/');
-                exit;
+        if ($email && $password) {
+            try {
+                $usuario = DB::fetchOne(
+                    "SELECT id, nome, email, senha_hash FROM usuarios WHERE email = ? LIMIT 1",
+                    [$email]
+                );
+                if ($usuario && password_verify($password, $usuario['senha_hash'])) {
+                    Auth::login($usuario);
+                    header('Location: ' . Security::url('/admin/'));
+                    exit;
+                }
+            } catch (Exception $e) {
+                error_log('Login error: ' . $e->getMessage());
             }
-        } catch (Exception $e) {
-            error_log('Login error: ' . $e->getMessage());
         }
+        $error = 'E-mail ou senha incorretos.';
     }
-    $error = 'E-mail ou senha incorretos.';
 }
 ?>
 <!DOCTYPE html>
@@ -43,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Entrar — TechSallus Admin</title>
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg"/>
+  <link rel="icon" type="image/png" href="/assets/img/favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/assets/css/admin.css"/>
@@ -60,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST" class="admin-login-form" novalidate>
+      <?= Security::csrfField() ?>
       <div class="form-field">
         <label for="email">E-mail</label>
         <input
@@ -68,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           name="email"
           required
           autocomplete="email"
-          placeholder="admin@techsallus.com.br"
+          placeholder="Digite seu e-mail"
           value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
         />
       </div>

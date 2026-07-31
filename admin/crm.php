@@ -12,7 +12,7 @@ Env::load($rootDir . '/.env');
 Auth::require();
 
 $adminUser = Auth::user();
-$pageTitle = 'CRM · Leads';
+$pageTitle = 'Kanban';
 $activeNav = 'crm';
 
 /* ── Filtros via GET ────────────────────────────────────────── */
@@ -38,7 +38,7 @@ try {
     $portesDisponiveis = DB::fetchAll("SELECT DISTINCT porte FROM leads WHERE porte != '' ORDER BY porte");
 
     /* Query principal com WHERE dinâmico */
-    $where  = ['1=1'];
+    $where  = ["status != 'arquivado'"];
     $params = [];
 
     if ($busca) {
@@ -61,8 +61,8 @@ try {
         $params[] = $ate;
     }
 
-    $sql = 'SELECT id, nome, instituicao, cargo, email, whatsapp, porte, status,
-                   utm_source, utm_medium, utm_campaign, criado_em
+    $sql = 'SELECT id, nome, instituicao, tipo_instituicao, perfil_operacao, principal_desafio, cargo, email, whatsapp, mensagem,
+                   porte, cidade, estado, status, utm_source, utm_medium, utm_campaign, criado_em
             FROM leads WHERE ' . implode(' AND ', $where) . ' ORDER BY criado_em DESC';
 
     $leads = DB::fetchAll($sql, $params);
@@ -177,20 +177,36 @@ include __DIR__ . '/_header.php';
                  data-id="<?= (int)$lead['id'] ?>"
                  data-nome="<?= htmlspecialchars($lead['nome'], ENT_QUOTES) ?>"
                  data-inst="<?= htmlspecialchars($lead['instituicao'], ENT_QUOTES) ?>"
+                 data-tipo="<?= htmlspecialchars($lead['tipo_instituicao'] ?? '', ENT_QUOTES) ?>"
+                 data-perfil="<?= htmlspecialchars($lead['perfil_operacao'] ?? '', ENT_QUOTES) ?>"
+                 data-desafio="<?= htmlspecialchars($lead['principal_desafio'] ?? '', ENT_QUOTES) ?>"
                  data-cargo="<?= htmlspecialchars($lead['cargo'], ENT_QUOTES) ?>"
                  data-email="<?= htmlspecialchars($lead['email'], ENT_QUOTES) ?>"
                  data-wa="<?= htmlspecialchars($lead['whatsapp'], ENT_QUOTES) ?>"
+                 data-mensagem="<?= htmlspecialchars($lead['mensagem'] ?? '', ENT_QUOTES) ?>"
                  data-porte="<?= htmlspecialchars($lead['porte'], ENT_QUOTES) ?>"
+                 data-cidade="<?= htmlspecialchars($lead['cidade'] ?? '', ENT_QUOTES) ?>"
+                 data-estado="<?= htmlspecialchars($lead['estado'] ?? '', ENT_QUOTES) ?>"
                  data-status="<?= htmlspecialchars($lead['status'], ENT_QUOTES) ?>"
                  data-data="<?= date('d/m/Y', strtotime($lead['criado_em'])) ?>"
                  data-utm="<?= htmlspecialchars($utm, ENT_QUOTES) ?>">
               <div class="kanban-card-name"><?= htmlspecialchars($lead['nome']) ?></div>
               <div class="kanban-card-inst"><?= htmlspecialchars($lead['instituicao']) ?></div>
               <div class="kanban-card-meta">
-                <span class="kanban-card-porte"><?= htmlspecialchars($lead['porte']) ?></span>
+                <span class="kanban-card-porte"><?= htmlspecialchars($lead['porte'] ?: ($lead['perfil_operacao'] ?? '')) ?></span>
                 <span class="kanban-card-date"><?= date('d/m/Y', strtotime($lead['criado_em'])) ?></span>
               </div>
               <button type="button" class="kanban-card-btn">Ver detalhes</button>
+              <button type="button"
+                      class="kanban-card-btn card-btn-archive"
+                      onclick="arquivarLead(<?= (int)$lead['id'] ?>)"
+                      title="Arquivar contato">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="21 8 21 21 3 21 3 8"/>
+                  <rect x="1" y="3" width="22" height="5"/>
+                  <line x1="10" y1="12" x2="14" y2="12"/>
+                </svg>
+              </button>
             </div>
           <?php endforeach; ?>
 
@@ -228,8 +244,24 @@ include __DIR__ . '/_header.php';
       <div class="modal-tab-pane active" data-tab="detalhes">
         <div class="modal-detail-grid">
           <div class="modal-detail-item">
+            <label>Perfil da operação</label>
+            <span id="modal-perfil">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <label>Principal desafio</label>
+            <span id="modal-desafio">—</span>
+          </div>
+          <div class="modal-detail-item">
             <label>Cargo</label>
             <span id="modal-cargo">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <label>Tipo de instituição</label>
+            <span id="modal-tipo">—</span>
+          </div>
+          <div class="modal-detail-item">
+            <label>Cidade / Estado</label>
+            <span id="modal-cidade-estado">—</span>
           </div>
           <div class="modal-detail-item">
             <label>Porte</label>
@@ -250,6 +282,10 @@ include __DIR__ . '/_header.php';
           <div class="modal-detail-item">
             <label>Cadastrado em</label>
             <span id="modal-data">—</span>
+          </div>
+          <div class="modal-detail-item modal-detail-full" id="modal-mensagem-row" style="display:none">
+            <label>Mensagem</label>
+            <span id="modal-mensagem">—</span>
           </div>
           <div class="modal-detail-item modal-detail-full" id="modal-utm-row" style="display:none">
             <label>UTM</label>

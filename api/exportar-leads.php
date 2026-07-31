@@ -8,6 +8,7 @@ $rootDir = dirname(__DIR__);
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
 require_once $rootDir . '/core/Auth.php';
+require_once $rootDir . '/core/Schema.php';
 Env::load($rootDir . '/.env');
 
 Auth::start();
@@ -18,25 +19,44 @@ if (!Auth::check()) {
     exit;
 }
 
-/* ── Filtros (mesmos do CRM) ────────────────────────────────── */
-$busca = trim($_GET['busca'] ?? '');
-$porte = trim($_GET['porte'] ?? '');
-$de    = trim($_GET['de']    ?? '');
-$ate   = trim($_GET['ate']   ?? '');
+/* ── Filtros (CRM + Contatos) ───────────────────────────────── */
+$busca   = trim($_GET['busca']   ?? '');
+$estado  = trim($_GET['estado']  ?? '');
+$tipo    = trim($_GET['tipo']    ?? '');
+$porte   = trim($_GET['porte']   ?? '');
+$periodo = trim($_GET['periodo'] ?? '');
+$de      = trim($_GET['de']      ?? '');
+$ate     = trim($_GET['ate']     ?? '');
 
 $where  = ['1=1'];
 $params = [];
 
 if ($busca) {
-    $where[]  = '(nome LIKE ? OR email LIKE ? OR instituicao LIKE ?)';
+    $where[]  = '(nome LIKE ? OR email LIKE ? OR instituicao LIKE ? OR cidade LIKE ?)';
     $like     = '%' . $busca . '%';
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
+    $params[] = $like;
+}
+if ($estado) {
+    $where[]  = 'estado = ?';
+    $params[] = $estado;
+}
+if ($tipo) {
+    $where[]  = 'tipo_instituicao = ?';
+    $params[] = $tipo;
 }
 if ($porte) {
     $where[]  = 'porte = ?';
     $params[] = $porte;
+}
+if ($periodo === 'hoje') {
+    $where[] = 'DATE(criado_em) = CURDATE()';
+} elseif ($periodo === 'semana') {
+    $where[] = 'criado_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+} elseif ($periodo === 'mes') {
+    $where[] = 'criado_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
 }
 if ($de) {
     $where[]  = 'DATE(criado_em) >= ?';
@@ -47,11 +67,12 @@ if ($ate) {
     $params[] = $ate;
 }
 
-$sql = 'SELECT id, nome, instituicao, cargo, email, whatsapp, porte, status,
-               utm_source, utm_medium, utm_campaign, ip_origem, criado_em, atualizado_em
-        FROM leads WHERE ' . implode(' AND ', $where) . ' ORDER BY criado_em DESC';
-
 try {
+    Schema::ensureLeadTrackingColumns();
+
+    $sql = 'SELECT id, nome, instituicao, tipo_instituicao, cargo, cidade, estado, email, whatsapp, porte, status,
+                   utm_source, utm_medium, utm_campaign, utm_term, utm_content, ip_origem, criado_em, atualizado_em
+            FROM leads WHERE ' . implode(' AND ', $where) . ' ORDER BY criado_em DESC';
     $leads = DB::fetchAll($sql, $params);
 } catch (Exception $e) {
     error_log('Exportar leads: ' . $e->getMessage());
@@ -75,8 +96,8 @@ fwrite($out, "\xEF\xBB\xBF");
 
 /* Cabeçalho */
 fputcsv($out, [
-    'ID', 'Nome', 'Instituição', 'Cargo', 'E-mail', 'WhatsApp',
-    'Porte', 'Status', 'UTM Source', 'UTM Medium', 'UTM Campaign',
+    'ID', 'Nome', 'Instituição', 'Tipo de Instituição', 'Cargo', 'Cidade', 'Estado', 'E-mail', 'WhatsApp',
+    'Porte', 'Status', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Term', 'UTM Content',
     'IP Origem', 'Cadastrado em', 'Atualizado em',
 ], ';');
 
@@ -86,7 +107,10 @@ foreach ($leads as $lead) {
         $lead['id'],
         $lead['nome'],
         $lead['instituicao'],
+        $lead['tipo_instituicao'] ?? '',
         $lead['cargo'],
+        $lead['cidade'] ?? '',
+        $lead['estado'] ?? '',
         $lead['email'],
         $lead['whatsapp'],
         $lead['porte'],
@@ -94,6 +118,8 @@ foreach ($leads as $lead) {
         $lead['utm_source']   ?? '',
         $lead['utm_medium']   ?? '',
         $lead['utm_campaign'] ?? '',
+        $lead['utm_term']     ?? '',
+        $lead['utm_content']  ?? '',
         $lead['ip_origem']    ?? '',
         $lead['criado_em'],
         $lead['atualizado_em'],

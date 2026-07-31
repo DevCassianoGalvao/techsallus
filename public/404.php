@@ -3,9 +3,14 @@
    public/404.php — Custom 404 page
    ───────────────────────────────────────────────────────────── */
 $rootDir = dirname(__DIR__);
+if (!file_exists($rootDir . '/core/Env.php')) {
+    $rootDir = __DIR__;
+}
 require_once $rootDir . '/core/Env.php';
 require_once $rootDir . '/core/DB.php';
+require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
+Security::headers();
 
 http_response_code(404);
 
@@ -24,7 +29,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Página não encontrada | Techsallus</title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/img/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/main.css">

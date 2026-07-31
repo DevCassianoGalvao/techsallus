@@ -1,16 +1,14 @@
 <?php
-/* ─────────────────────────────────────────────────────────────
-   TechSallus — i18n helper
-   Usage: <?= t('nav_system') ?>
-   ───────────────────────────────────────────────────────────── */
+declare(strict_types=1);
 
-/* Base path for subfolder deployment (e.g. /techsallus). Empty = root. */
 define('BASE', rtrim(getenv('BASE_PATH') ?: '', '/'));
 
 $SUPPORTED_LANGS = ['pt', 'en', 'es'];
 
-function detectLang(): string {
+function detectLang(): string
+{
     global $SUPPORTED_LANGS;
+
     $lang = $_COOKIE['lang'] ?? '';
     return in_array($lang, $SUPPORTED_LANGS, true) ? $lang : 'pt';
 }
@@ -18,54 +16,306 @@ function detectLang(): string {
 $LANG = detectLang();
 
 $TRANSLATIONS = [
-  'pt' => [
-    'lang_label'   => 'PT',
-    'lang_pt'      => 'Português',
-    'lang_en'      => 'English',
-    'lang_es'      => 'Español',
-    'nav_home'     => 'Início',
-    'nav_system'   => 'Sistema',
-    'nav_modules'  => 'Módulos',
-    'nav_plans'    => 'Planos',
-    'nav_support'  => 'Suporte',
-    'nav_blog'     => 'Blog',
-    'nav_cta'      => 'Quero conhecer o sistema',
-    'nav_demo'     => 'Demonstração gratuita',
-    'breadcrumb_home' => 'Início',
-  ],
-  'en' => [
-    'lang_label'   => 'EN',
-    'lang_pt'      => 'Português',
-    'lang_en'      => 'English',
-    'lang_es'      => 'Español',
-    'nav_home'     => 'Home',
-    'nav_system'   => 'System',
-    'nav_modules'  => 'Modules',
-    'nav_plans'    => 'Plans',
-    'nav_support'  => 'Support',
-    'nav_blog'     => 'Blog',
-    'nav_cta'      => 'See the system',
-    'nav_demo'     => 'Free demo',
-    'breadcrumb_home' => 'Home',
-  ],
-  'es' => [
-    'lang_label'   => 'ES',
-    'lang_pt'      => 'Português',
-    'lang_en'      => 'English',
-    'lang_es'      => 'Español',
-    'nav_home'     => 'Inicio',
-    'nav_system'   => 'Sistema',
-    'nav_modules'  => 'Módulos',
-    'nav_plans'    => 'Planes',
-    'nav_support'  => 'Soporte',
-    'nav_blog'     => 'Blog',
-    'nav_cta'      => 'Conocer el sistema',
-    'nav_demo'     => 'Demo gratuita',
-    'breadcrumb_home' => 'Inicio',
-  ],
+    'pt' => [
+        'lang_label' => 'PT',
+        'lang_pt' => 'Português',
+        'lang_en' => 'English',
+        'lang_es' => 'Español',
+        'nav_home' => 'Início',
+        'nav_system' => 'Sistema',
+        'nav_modules' => 'Módulos',
+        'nav_plans' => 'Planos',
+        'nav_support' => 'Suporte',
+        'nav_blog' => 'Blog',
+        'nav_cta' => 'Quero conhecer o sistema',
+        'nav_demo' => 'Demonstração gratuita',
+        'breadcrumb_home' => 'Início',
+        'hero_label' => 'Sistema de gestão hospitalar',
+        'hero_title_orange' => 'O sistema completo para a sua clínica ou hospital',
+        'hero_title_rest' => 'funcionar melhor',
+        'hero_title_tail' => 'a partir de hoje',
+        'hero_sub' => 'O TechSallus é uma plataforma modular de gestão hospitalar que integra agendamento, atendimento, prontuário, faturamento, estoque e financeiro em um único sistema — sem precisar contratar vários fornecedores.',
+        'hero_plans' => 'Ver planos e preços',
+        'sobre_h2' => 'Um sistema criado para quem vive a rotina da saúde',
+        'modulos_h2' => 'Tudo que a sua instituição precisa, em um único sistema',
+        'porque_h2' => 'Por que clínicas e hospitais em todo o Brasil escolhem o TechSallus?',
+        'suporte_h2' => 'Suporte técnico que entende da operação',
+        'onde_h2' => 'Atendemos clínicas e hospitais em todo o Brasil',
+        'demo_h2' => 'Quer ver o TechSallus funcionando na prática?',
+        'planos_h2' => 'Escolha o plano certo para o porte da sua instituição',
+
+        // ── Nav (10-page rebuild, jul/2026) ──
+        'nav_consultorios' => 'Consultórios',
+        'nav_clinicas' => 'Clínicas',
+        'nav_hospitais' => 'Hospitais',
+        'nav_apure_custos' => 'Apure Custos',
+        'nav_sobre' => 'Sobre',
+        'nav_contato' => 'Contato',
+        'nav_top_cta' => 'Falar com um especialista',
+
+        // ── Footer (10-page rebuild) ──
+        'footer_tagline' => 'Gestão integrada para consultórios, clínicas, policlínicas, hospitais e pronto atendimento. Da agenda ao resultado, conectamos atendimento, operação, faturamento e decisão.',
+        'footer_col_solucoes' => 'Soluções',
+        'footer_col_resultados' => 'Resultados',
+        'footer_col_gestao' => 'Gestão',
+        'footer_col_empresa' => 'Empresa',
+        'footer_link_consultorios' => 'Consultórios',
+        'footer_link_clinicas' => 'Clínicas e Policlínicas',
+        'footer_link_hospitais' => 'Hospitais e Pronto Atendimento',
+        'footer_link_absenteismo' => 'Absenteísmo',
+        'footer_link_fluxo' => 'Fluxo de atendimento',
+        'footer_link_faturamento' => 'Faturamento e glosas',
+        'footer_link_custos' => 'Custos e margem',
+        'footer_link_gestao' => 'TechSallus Gestão',
+        'footer_link_apure' => 'Apure Custos',
+        'footer_link_bi' => 'BI e indicadores',
+        'footer_link_sobre' => 'Sobre a TechSallus',
+        'footer_link_tecnologia' => 'Tecnologia e Integrações',
+        'footer_link_faq' => 'Perguntas Frequentes',
+        'footer_link_contato' => 'Contato',
+
+        // ── Reused CTA strings ──
+        'cta_falar_especialista' => 'Falar com um especialista',
+        'cta_solicitar_contato' => 'Solicitar contato',
+        'cta_mapear_gargalo' => 'Mapear meu principal gargalo',
+
+        // ── Contato form (10-page rebuild) ──
+        'form_nome' => 'Nome',
+        'form_nome_help' => 'Seu nome completo',
+        'form_instituicao' => 'Instituição',
+        'form_instituicao_help' => 'Nome do consultório, clínica, hospital ou organização',
+        'form_perfil' => 'Perfil da operação',
+        'form_perfil_consultorio' => 'Consultório',
+        'form_perfil_clinica' => 'Clínica/Policlínica',
+        'form_perfil_hospital' => 'Hospital',
+        'form_perfil_pa' => 'Pronto Atendimento',
+        'form_perfil_outro' => 'Outro',
+        'form_desafio' => 'Principal desafio',
+        'form_desafio_faltas' => 'Faltas e agenda',
+        'form_desafio_fluxo' => 'Fluxo de atendimento',
+        'form_desafio_faturamento' => 'Faturamento e glosas',
+        'form_desafio_estoque' => 'Estoque e farmácia',
+        'form_desafio_custos' => 'Custos e margem',
+        'form_desafio_integracoes' => 'Integrações',
+        'form_email' => 'E-mail',
+        'form_email_help' => 'Seu melhor e-mail profissional',
+        'form_whatsapp' => 'Telefone ou WhatsApp',
+        'form_whatsapp_help' => 'Número com DDD',
+        'form_mensagem' => 'Mensagem',
+        'form_mensagem_help' => 'Conte brevemente como a operação funciona hoje e o que precisa melhorar',
+        'form_selecione' => 'Selecione',
+        'form_submit' => 'Enviar e falar com um especialista',
+        'form_sending' => 'Enviando...',
+        'form_success_title' => 'Recebemos sua mensagem!',
+        'form_success_desc' => 'Nossa equipe entrará em contato para entender a operação e indicar o caminho mais adequado para a sua realidade.',
+        'form_error_generic' => 'Erro ao enviar. Tente novamente em instantes.',
+    ],
+    'en' => [
+        'lang_label' => 'EN',
+        'lang_pt' => 'Portuguese',
+        'lang_en' => 'English',
+        'lang_es' => 'Spanish',
+        'nav_home' => 'Home',
+        'nav_system' => 'System',
+        'nav_modules' => 'Modules',
+        'nav_plans' => 'Plans',
+        'nav_support' => 'Support',
+        'nav_blog' => 'Blog',
+        'nav_cta' => 'See the system',
+        'nav_demo' => 'Free demo',
+        'breadcrumb_home' => 'Home',
+        'hero_label' => 'Hospital management system',
+        'hero_title_orange' => 'The complete system for your clinic or hospital',
+        'hero_title_rest' => 'to run better',
+        'hero_title_tail' => 'starting today',
+        'hero_sub' => 'TechSallus is a modular hospital management platform that integrates scheduling, care, medical records, billing, inventory and finance in one system — without hiring multiple providers.',
+        'hero_plans' => 'View plans and pricing',
+        'sobre_h2' => 'A system created for real healthcare operations',
+        'modulos_h2' => 'Everything your institution needs in one system',
+        'porque_h2' => 'Why clinics and hospitals across Brazil choose TechSallus',
+        'suporte_h2' => 'Technical support that understands operations',
+        'onde_h2' => 'We serve clinics and hospitals across Brazil',
+        'demo_h2' => 'Want to see TechSallus working in practice?',
+        'planos_h2' => 'Choose the right plan for your institution size',
+
+        // ── Nav (10-page rebuild, jul/2026) ──
+        'nav_consultorios' => 'Private Practices',
+        'nav_clinicas' => 'Clinics',
+        'nav_hospitais' => 'Hospitals',
+        'nav_apure_custos' => 'Apure Custos',
+        'nav_sobre' => 'About',
+        'nav_contato' => 'Contact',
+        'nav_top_cta' => 'Talk to a specialist',
+
+        // ── Footer (10-page rebuild) ──
+        'footer_tagline' => 'Integrated management for private practices, clinics, polyclinics, hospitals and urgent care. From scheduling to results, we connect care, operations, billing and decision-making.',
+        'footer_col_solucoes' => 'Solutions',
+        'footer_col_resultados' => 'Results',
+        'footer_col_gestao' => 'Management',
+        'footer_col_empresa' => 'Company',
+        'footer_link_consultorios' => 'Private Practices',
+        'footer_link_clinicas' => 'Clinics and Polyclinics',
+        'footer_link_hospitais' => 'Hospitals and Urgent Care',
+        'footer_link_absenteismo' => 'No-shows',
+        'footer_link_fluxo' => 'Care flow',
+        'footer_link_faturamento' => 'Billing and denials',
+        'footer_link_custos' => 'Costs and margin',
+        'footer_link_gestao' => 'TechSallus Gestão',
+        'footer_link_apure' => 'Apure Custos',
+        'footer_link_bi' => 'BI and dashboards',
+        'footer_link_sobre' => 'About TechSallus',
+        'footer_link_tecnologia' => 'Technology and Integrations',
+        'footer_link_faq' => 'FAQ',
+        'footer_link_contato' => 'Contact',
+
+        // ── Reused CTA strings ──
+        'cta_falar_especialista' => 'Talk to a specialist',
+        'cta_solicitar_contato' => 'Request contact',
+        'cta_mapear_gargalo' => 'Map my main bottleneck',
+
+        // ── Contato form (10-page rebuild) ──
+        'form_nome' => 'Name',
+        'form_nome_help' => 'Your full name',
+        'form_instituicao' => 'Institution',
+        'form_instituicao_help' => 'Name of the practice, clinic, hospital or organization',
+        'form_perfil' => 'Operation profile',
+        'form_perfil_consultorio' => 'Private practice',
+        'form_perfil_clinica' => 'Clinic/Polyclinic',
+        'form_perfil_hospital' => 'Hospital',
+        'form_perfil_pa' => 'Urgent Care',
+        'form_perfil_outro' => 'Other',
+        'form_desafio' => 'Main challenge',
+        'form_desafio_faltas' => 'No-shows and scheduling',
+        'form_desafio_fluxo' => 'Care flow',
+        'form_desafio_faturamento' => 'Billing and denials',
+        'form_desafio_estoque' => 'Inventory and pharmacy',
+        'form_desafio_custos' => 'Costs and margin',
+        'form_desafio_integracoes' => 'Integrations',
+        'form_email' => 'Email',
+        'form_email_help' => 'Your best professional email',
+        'form_whatsapp' => 'Phone or WhatsApp',
+        'form_whatsapp_help' => 'Number with area code',
+        'form_mensagem' => 'Message',
+        'form_mensagem_help' => 'Briefly tell us how the operation works today and what needs to improve',
+        'form_selecione' => 'Select',
+        'form_submit' => 'Send and talk to a specialist',
+        'form_sending' => 'Sending...',
+        'form_success_title' => 'We received your message!',
+        'form_success_desc' => 'Our team will get in touch to understand your operation and point out the best path for your reality.',
+        'form_error_generic' => 'Something went wrong. Please try again in a moment.',
+    ],
+    'es' => [
+        'lang_label' => 'ES',
+        'lang_pt' => 'Portugués',
+        'lang_en' => 'Inglés',
+        'lang_es' => 'Español',
+        'nav_home' => 'Inicio',
+        'nav_system' => 'Sistema',
+        'nav_modules' => 'Módulos',
+        'nav_plans' => 'Planes',
+        'nav_support' => 'Soporte',
+        'nav_blog' => 'Blog',
+        'nav_cta' => 'Conocer el sistema',
+        'nav_demo' => 'Demo gratuita',
+        'breadcrumb_home' => 'Inicio',
+        'hero_label' => 'Sistema de gestión hospitalaria',
+        'hero_title_orange' => 'El sistema completo para que su clínica u hospital',
+        'hero_title_rest' => 'funcione mejor',
+        'hero_title_tail' => 'desde hoy',
+        'hero_sub' => 'TechSallus es una plataforma modular de gestión hospitalaria que integra agenda, atención, historia clínica, facturación, inventario y finanzas en un solo sistema — sin contratar varios proveedores.',
+        'hero_plans' => 'Ver planes y precios',
+        'sobre_h2' => 'Un sistema creado para quienes viven la rutina de salud',
+        'modulos_h2' => 'Todo lo que su institución necesita en un solo sistema',
+        'porque_h2' => 'Por qué clínicas y hospitales en todo Brasil eligen TechSallus',
+        'suporte_h2' => 'Soporte técnico que entiende la operación',
+        'onde_h2' => 'Atendemos clínicas y hospitales en todo Brasil',
+        'demo_h2' => 'Quiere ver TechSallus funcionando en la práctica?',
+        'planos_h2' => 'Elija el plan correcto para el tamaño de su institución',
+
+        // ── Nav (10-page rebuild, jul/2026) ──
+        'nav_consultorios' => 'Consultorios',
+        'nav_clinicas' => 'Clínicas',
+        'nav_hospitais' => 'Hospitales',
+        'nav_apure_custos' => 'Apure Custos',
+        'nav_sobre' => 'Nosotros',
+        'nav_contato' => 'Contacto',
+        'nav_top_cta' => 'Hablar con un especialista',
+
+        // ── Footer (10-page rebuild) ──
+        'footer_tagline' => 'Gestión integrada para consultorios, clínicas, policlínicas, hospitales y urgencias. De la agenda al resultado, conectamos atención, operación, facturación y decisión.',
+        'footer_col_solucoes' => 'Soluciones',
+        'footer_col_resultados' => 'Resultados',
+        'footer_col_gestao' => 'Gestión',
+        'footer_col_empresa' => 'Empresa',
+        'footer_link_consultorios' => 'Consultorios',
+        'footer_link_clinicas' => 'Clínicas y Policlínicas',
+        'footer_link_hospitais' => 'Hospitales y Urgencias',
+        'footer_link_absenteismo' => 'Ausentismo',
+        'footer_link_fluxo' => 'Flujo de atención',
+        'footer_link_faturamento' => 'Facturación y glosas',
+        'footer_link_custos' => 'Costos y margen',
+        'footer_link_gestao' => 'TechSallus Gestão',
+        'footer_link_apure' => 'Apure Custos',
+        'footer_link_bi' => 'BI e indicadores',
+        'footer_link_sobre' => 'Sobre TechSallus',
+        'footer_link_tecnologia' => 'Tecnología e Integraciones',
+        'footer_link_faq' => 'Preguntas Frecuentes',
+        'footer_link_contato' => 'Contacto',
+
+        // ── Reused CTA strings ──
+        'cta_falar_especialista' => 'Hablar con un especialista',
+        'cta_solicitar_contato' => 'Solicitar contacto',
+        'cta_mapear_gargalo' => 'Mapear mi principal cuello de botella',
+
+        // ── Contato form (10-page rebuild) ──
+        'form_nome' => 'Nombre',
+        'form_nome_help' => 'Su nombre completo',
+        'form_instituicao' => 'Institución',
+        'form_instituicao_help' => 'Nombre del consultorio, clínica, hospital u organización',
+        'form_perfil' => 'Perfil de la operación',
+        'form_perfil_consultorio' => 'Consultorio',
+        'form_perfil_clinica' => 'Clínica/Policlínica',
+        'form_perfil_hospital' => 'Hospital',
+        'form_perfil_pa' => 'Urgencias',
+        'form_perfil_outro' => 'Otro',
+        'form_desafio' => 'Principal desafío',
+        'form_desafio_faltas' => 'Ausencias y agenda',
+        'form_desafio_fluxo' => 'Flujo de atención',
+        'form_desafio_faturamento' => 'Facturación y glosas',
+        'form_desafio_estoque' => 'Inventario y farmacia',
+        'form_desafio_custos' => 'Costos y margen',
+        'form_desafio_integracoes' => 'Integraciones',
+        'form_email' => 'Correo electrónico',
+        'form_email_help' => 'Su mejor correo profesional',
+        'form_whatsapp' => 'Teléfono o WhatsApp',
+        'form_whatsapp_help' => 'Número con código de área',
+        'form_mensagem' => 'Mensaje',
+        'form_mensagem_help' => 'Cuéntenos brevemente cómo funciona la operación hoy y qué necesita mejorar',
+        'form_selecione' => 'Seleccione',
+        'form_submit' => 'Enviar y hablar con un especialista',
+        'form_sending' => 'Enviando...',
+        'form_success_title' => '¡Recibimos su mensaje!',
+        'form_success_desc' => 'Nuestro equipo se pondrá en contacto para entender la operación e indicar el camino más adecuado para su realidad.',
+        'form_error_generic' => 'Error al enviar. Intente nuevamente en unos instantes.',
+    ],
 ];
 
-function t(string $key): string {
+function t(string $key): string
+{
     global $TRANSLATIONS, $LANG;
-    return htmlspecialchars($TRANSLATIONS[$LANG][$key] ?? $TRANSLATIONS['pt'][$key] ?? $key);
+
+    return htmlspecialchars($TRANSLATIONS[$LANG][$key] ?? $TRANSLATIONS['pt'][$key] ?? $key, ENT_QUOTES, 'UTF-8');
+}
+
+function tx(string $pt, string $en, string $es): string
+{
+    global $LANG;
+
+    $value = match ($LANG) {
+        'en' => $en,
+        'es' => $es,
+        default => $pt,
+    };
+
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
