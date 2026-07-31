@@ -52,6 +52,10 @@ $TRANSLATIONS = [
         'nav_sobre' => 'Sobre',
         'nav_contato' => 'Contato',
         'nav_top_cta' => 'Falar com um especialista',
+        'nav_solucoes' => 'Soluções',
+        'nav_resultados' => 'Resultados',
+        'nav_tecnologia' => 'Tecnologia',
+        'nav_faq_link' => 'FAQ',
 
         // ── Footer (10-page rebuild) ──
         'footer_tagline' => 'Gestão integrada para consultórios, clínicas, policlínicas, hospitais e pronto atendimento. Da agenda ao resultado, conectamos atendimento, operação, faturamento e decisão.',
@@ -146,6 +150,10 @@ $TRANSLATIONS = [
         'nav_sobre' => 'About',
         'nav_contato' => 'Contact',
         'nav_top_cta' => 'Talk to a specialist',
+        'nav_solucoes' => 'Solutions',
+        'nav_resultados' => 'Results',
+        'nav_tecnologia' => 'Technology',
+        'nav_faq_link' => 'FAQ',
 
         // ── Footer (10-page rebuild) ──
         'footer_tagline' => 'Integrated management for private practices, clinics, polyclinics, hospitals and urgent care. From scheduling to results, we connect care, operations, billing and decision-making.',
@@ -240,6 +248,10 @@ $TRANSLATIONS = [
         'nav_sobre' => 'Nosotros',
         'nav_contato' => 'Contacto',
         'nav_top_cta' => 'Hablar con un especialista',
+        'nav_solucoes' => 'Soluciones',
+        'nav_resultados' => 'Resultados',
+        'nav_tecnologia' => 'Tecnología',
+        'nav_faq_link' => 'FAQ',
 
         // ── Footer (10-page rebuild) ──
         'footer_tagline' => 'Gestión integrada para consultorios, clínicas, policlínicas, hospitales y urgencias. De la agenda al resultado, conectamos atención, operación, facturación y decisión.',

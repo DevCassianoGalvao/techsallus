@@ -12,6 +12,11 @@ require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
 Security::headers();
 
+$_cfg = file_exists(__DIR__ . '/../config/i18n.php')
+    ? __DIR__ . '/../config/i18n.php'
+    : __DIR__ . '/config/i18n.php';
+require_once $_cfg;
+
 http_response_code(404);
 
 try {

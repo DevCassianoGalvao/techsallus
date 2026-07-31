@@ -1,52 +1,45 @@
-<footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <img src="/assets/img/logo.png" alt="Techsallus" class="footer-logo"/>
-        <p class="footer-tagline"><?= t('footer_tagline') ?></p>
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a href="/" class="brand"><img class="footer-logo" src="/assets/img/techsallus-logo.png" alt="TechSallus"/></a>
+        <p><?= t('footer_tagline') ?></p>
       </div>
 
-      <div>
-        <div class="footer-col-title"><?= t('footer_col_solucoes') ?></div>
-        <div class="footer-links">
-          <a href="/consultorios"><?= t('footer_link_consultorios') ?></a>
-          <a href="/clinicas"><?= t('footer_link_clinicas') ?></a>
-          <a href="/hospitais"><?= t('footer_link_hospitais') ?></a>
-        </div>
+      <div class="foot-col">
+        <h5><?= t('footer_col_solucoes') ?></h5>
+        <a href="/consultorios"><?= t('footer_link_consultorios') ?></a>
+        <a href="/clinicas"><?= t('footer_link_clinicas') ?></a>
+        <a href="/hospitais"><?= t('footer_link_hospitais') ?></a>
       </div>
 
-      <div>
-        <div class="footer-col-title"><?= t('footer_col_resultados') ?></div>
-        <div class="footer-links">
-          <a href="/resultados#absenteismo"><?= t('footer_link_absenteismo') ?></a>
-          <a href="/resultados#fluxo"><?= t('footer_link_fluxo') ?></a>
-          <a href="/resultados#faturamento"><?= t('footer_link_faturamento') ?></a>
-          <a href="/resultados#custos"><?= t('footer_link_custos') ?></a>
-        </div>
+      <div class="foot-col">
+        <h5><?= t('footer_col_resultados') ?></h5>
+        <a href="/resultados"><?= t('footer_link_absenteismo') ?></a>
+        <a href="/resultados"><?= t('footer_link_fluxo') ?></a>
+        <a href="/resultados"><?= t('footer_link_faturamento') ?></a>
+        <a href="/resultados"><?= t('footer_link_custos') ?></a>
       </div>
 
-      <div>
-        <div class="footer-col-title"><?= t('footer_col_gestao') ?></div>
-        <div class="footer-links">
-          <a href="/apure-custos"><?= t('footer_link_gestao') ?></a>
-          <a href="/apure-custos"><?= t('footer_link_apure') ?></a>
-          <a href="/clinicas#bi"><?= t('footer_link_bi') ?></a>
-        </div>
+      <div class="foot-col">
+        <h5><?= t('footer_col_gestao') ?></h5>
+        <a href="/apure-custos"><?= t('footer_link_gestao') ?></a>
+        <a href="/apure-custos"><?= t('footer_link_apure') ?></a>
+        <a href="/tecnologia"><?= t('footer_link_bi') ?></a>
       </div>
 
-      <div>
-        <div class="footer-col-title"><?= t('footer_col_empresa') ?></div>
-        <div class="footer-links">
-          <a href="/sobre"><?= t('footer_link_sobre') ?></a>
-          <a href="/tecnologia"><?= t('footer_link_tecnologia') ?></a>
-          <a href="/faq"><?= t('footer_link_faq') ?></a>
-          <a href="/contato"><?= t('footer_link_contato') ?></a>
-        </div>
+      <div class="foot-col">
+        <h5><?= t('footer_col_empresa') ?></h5>
+        <a href="/sobre"><?= t('footer_link_sobre') ?></a>
+        <a href="/tecnologia"><?= t('footer_link_tecnologia') ?></a>
+        <a href="/faq"><?= t('footer_link_faq') ?></a>
+        <a href="/contato"><?= t('footer_link_contato') ?></a>
       </div>
     </div>
 
-    <div class="footer-bottom">
-      <span class="footer-copy">&copy; <?= date('Y') ?> Techsallus. Todos os direitos reservados.</span>
+    <div class="foot-bottom">
+      <span>&copy; <?= date('Y') ?> TechSallus. <?= tx('Todos os direitos reservados.', 'All rights reserved.', 'Todos los derechos reservados.') ?></span>
+      <a href="https://www.instagram.com/cassianogalvao.web" target="_blank" rel="noopener" style="color:inherit">Desenvolvido por @cassianogalvao.web</a>
     </div>
   </div>
 </footer>

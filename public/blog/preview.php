@@ -13,6 +13,8 @@ Env::load($rootDir . '/.env');
 Security::headers();
 Auth::start();
 
+require_once $rootDir . '/config/i18n.php';
+
 if (!Auth::check()) {
     header('Location: ' . Security::url('/admin/login.php'));
     exit;
