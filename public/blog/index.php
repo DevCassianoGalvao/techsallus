@@ -13,6 +13,7 @@ require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
 Security::headers();
 $whatsappUrl = Settings::whatsappUrl();
+$_baseUrl = rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/');
 
 /* ── Parâmetros ──────────────────────────────────────────────── */
 $busca     = trim($_GET['busca'] ?? '');
@@ -89,7 +90,7 @@ function getScripts(string $pos): string {
   <meta property="og:title"       content="<?= htmlspecialchars($metaTitle) ?>"/>
   <meta property="og:description" content="<?= htmlspecialchars($metaDesc) ?>"/>
   <meta property="og:type"        content="website"/>
-  <link rel="canonical" href="https://techsallus.com.br/blog/"/>
+  <link rel="canonical" href="<?= htmlspecialchars($_baseUrl) ?>/blog/"/>
   <link rel="icon" type="image/png" href="/assets/img/favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>

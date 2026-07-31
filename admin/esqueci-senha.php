@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         [$token, $expires, $usuario['id']]
                     );
 
-                    $link = "https://techsallus.com.br/admin/redefinir-senha.php?token={$token}";
+                    $baseUrl = rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/');
+                    $link = "{$baseUrl}/admin/redefinir-senha.php?token={$token}";
                     $apiKey = Env::get('BREVO_API_KEY');
 
                     if ($apiKey) {

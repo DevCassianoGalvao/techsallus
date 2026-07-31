@@ -13,7 +13,7 @@ Env::load($rootDir . '/.env');
 
 header('Content-Type: application/xml; charset=utf-8');
 
-$baseUrl = 'https://techsallus.com.br';
+$baseUrl = rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/');
 
 try {
     $posts = DB::fetchAll(

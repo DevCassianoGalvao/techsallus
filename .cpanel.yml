@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=$HOME/public_html/
+    - export DEPLOYPATH=$HOME/public_html/techsallus/
     - /bin/cp -R public/. $DEPLOYPATH
     - /bin/cp -R admin $DEPLOYPATH
     - /bin/cp -R api $DEPLOYPATH

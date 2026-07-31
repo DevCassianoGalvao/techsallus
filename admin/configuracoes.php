@@ -148,7 +148,7 @@ require_once __DIR__ . '/_header.php';
     <div class="utm-generator">
       <div class="editor-field">
         <label class="editor-label" for="utm_base_url">URL de destino</label>
-        <input class="editor-input" id="utm_base_url" type="url" value="https://techsallus.com.br/">
+        <input class="editor-input" id="utm_base_url" type="url" value="<?= htmlspecialchars(rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/')) ?>/">
       </div>
       <div class="utm-grid">
         <div class="editor-field">

@@ -14,6 +14,7 @@ require_once $rootDir . '/core/Security.php';
 Env::load($rootDir . '/.env');
 Security::headers();
 $whatsappUrl = Settings::whatsappUrl();
+$_baseUrl = rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/');
 
 $slug = trim($_GET['slug'] ?? '');
 
@@ -90,9 +91,9 @@ $schema = json_encode([
     'publisher'     => [
         '@type' => 'Organization',
         'name'  => 'Techsallus',
-        'logo'  => ['@type' => 'ImageObject', 'url' => 'https://techsallus.com.br/assets/img/logo.svg'],
+        'logo'  => ['@type' => 'ImageObject', 'url' => $_baseUrl . '/assets/img/logo.svg'],
     ],
-    'image' => $post['imagem_capa'] ? 'https://techsallus.com.br' . $post['imagem_capa'] : null,
+    'image' => $post['imagem_capa'] ? $_baseUrl . $post['imagem_capa'] : null,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 /* ── Scripts injetados ───────────────────────────────────────── */
@@ -116,9 +117,9 @@ function getScripts(string $pos): string {
   <meta property="og:description" content="<?= htmlspecialchars($post['resumo']) ?>"/>
   <meta property="og:type"        content="article"/>
   <?php if ($post['imagem_capa']): ?>
-  <meta property="og:image" content="https://techsallus.com.br<?= htmlspecialchars($post['imagem_capa']) ?>"/>
+  <meta property="og:image" content="<?= htmlspecialchars($_baseUrl) ?><?= htmlspecialchars($post['imagem_capa']) ?>"/>
   <?php endif; ?>
-  <link rel="canonical" href="https://techsallus.com.br/blog/<?= htmlspecialchars($post['slug']) ?>"/>
+  <link rel="canonical" href="<?= htmlspecialchars($_baseUrl) ?>/blog/<?= htmlspecialchars($post['slug']) ?>"/>
   <link rel="icon" type="image/png" href="/assets/img/favicon.png"/>
   <script type="application/ld+json"><?= $schema ?></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>

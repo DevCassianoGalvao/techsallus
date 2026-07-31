@@ -172,7 +172,7 @@ function notificarBrevo(string $nome, string $inst, string $perfil, string $desa
                 {$mensagemRow}
               </table>
               <p style='margin-top:20px'>
-                <a href='https://techsallus.com.br/admin/crm.php'
+                <a href='" . rtrim(Env::get('BASE_URL', 'https://techsallus.com.br'), '/') . "/admin/crm.php'
                    style='background:#094a86;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600'>
                   Ver no Kanban
                 </a>
