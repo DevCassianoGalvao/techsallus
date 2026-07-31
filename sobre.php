@@ -60,9 +60,9 @@ $_values = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Como pensamos', 'How we think', 'Cómo pensamos') ?></span>
       <h2 class="reveal"><?= tx('Da agenda ao resultado.', 'From scheduling to results.', 'De la agenda al resultado.') ?></h2>
       <p class="reveal"><?= tx('A TechSallus conecta processos clínicos, administrativos e financeiros para que a informação acompanhe o paciente e sustente a gestão. A plataforma é modular para respeitar o momento de cada instituição e integrada para evitar novas ilhas de informação.', 'TechSallus connects clinical, administrative and financial processes so information follows the patient and sustains management. The platform is modular to respect each institution\'s moment, and integrated to avoid new islands of information.', 'TechSallus conecta procesos clínicos, administrativos y financieros para que la información acompañe al paciente y sostenga la gestión. La plataforma es modular para respetar el momento de cada institución e integrada para evitar nuevas islas de información.') ?></p>
@@ -75,7 +75,7 @@ $_values = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Soluções para diferentes realidades', 'Solutions for different realities', 'Soluciones para diferentes realidades') ?></span>
@@ -113,7 +113,7 @@ $_values = [
   </div>
 </section>
 
-<section class="section tint" id="cta">
+<section class="section band-dark" id="cta">
   <div class="wrap">
     <span class="eyebrow reveal"><?= tx('Vamos conversar', 'Let\'s talk', 'Conversemos') ?></span>
     <h2 class="reveal"><?= tx('Conte sobre a realidade da sua instituição.', 'Tell us about your institution\'s reality.', 'Cuéntenos sobre la realidad de su institución.') ?></h2>

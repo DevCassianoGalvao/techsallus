@@ -89,9 +89,9 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O problema real', 'The real problem', 'El problema real') ?></span>
       <h2 class="reveal"><?= tx('Seu consultório precisa de tempo, não de mais controles paralelos.', 'Your practice needs time, not more parallel controls.', 'Su consultorio necesita tiempo, no más controles paralelos.') ?></h2>
       <p class="reveal"><?= tx('Confirmar consultas uma a uma, procurar informações em sistemas diferentes e revisar o faturamento no fim do dia consome horas que poderiam estar voltadas ao paciente.', 'Confirming appointments one by one, searching for information across different systems and reviewing billing at the end of the day consumes hours that could be spent on the patient.', 'Confirmar consultas una por una, buscar información en sistemas diferentes y revisar la facturación al final del día consume horas que podrían dedicarse al paciente.') ?></p>
@@ -104,7 +104,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Como funciona na prática', 'How it works in practice', 'Cómo funciona en la práctica') ?></span>
@@ -118,7 +118,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow reveal"><?= tx('Recursos disponíveis', 'Available features', 'Recursos disponibles') ?></span>
@@ -132,7 +132,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint" id="cta">
+<section class="section band-dark" id="cta">
   <div class="wrap">
     <span class="eyebrow reveal"><?= tx('Comece pelo que mais toma tempo da sua equipe', 'Start with what takes the most time from your team', 'Comience por lo que más tiempo le quita a su equipo') ?></span>
     <h2 class="reveal"><?= tx('Agenda, prontuário ou faturamento: você escolhe por onde começar.', 'Scheduling, medical records or billing: you choose where to start.', 'Agenda, historia clínica o facturación: usted elige por dónde empezar.') ?></h2>

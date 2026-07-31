@@ -3,6 +3,9 @@
    api/crm.php — CRM API (admin-only, JSON)
    POST actions:
      mover          — UPDATE leads SET status = ?  + grava histórico
+     arquivar       — UPDATE leads SET status = 'arquivado'
+     editar         — UPDATE campos editáveis do lead/contato
+     excluir        — DELETE lead (+ notas/histórico relacionados)
      notas          — SELECT lead_notas for a lead
      adicionar_nota — INSERT into lead_notas        + grava histórico
      historico      — SELECT lead_historico for a lead
@@ -167,6 +170,79 @@ switch ($action) {
             echo json_encode(['ok' => true, 'id' => $noteId]);
         } catch (Exception $e) {
             error_log('CRM adicionar_nota: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'erro' => 'Erro interno']);
+        }
+        break;
+
+    /* ── editar ──────────────────────────────────────────────── */
+    case 'editar':
+        $id = (int)($input['id'] ?? 0);
+        if (!$id) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'erro' => 'id obrigatório']);
+            exit;
+        }
+
+        $editaveis = [
+            'nome', 'instituicao', 'cargo', 'tipo_instituicao', 'perfil_operacao',
+            'principal_desafio', 'email', 'whatsapp', 'porte', 'cidade', 'estado', 'mensagem',
+        ];
+
+        $set    = [];
+        $params = [];
+        foreach ($editaveis as $campo) {
+            if (!array_key_exists($campo, $input)) {
+                continue;
+            }
+            $valor = trim((string)$input[$campo]);
+            if ($campo === 'email' && $valor !== '' && !filter_var($valor, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(422);
+                echo json_encode(['ok' => false, 'erro' => 'E-mail inválido']);
+                exit;
+            }
+            $set[]    = "{$campo} = ?";
+            $params[] = $valor;
+        }
+
+        if (!$set) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'erro' => 'Nenhum campo para atualizar']);
+            exit;
+        }
+
+        $params[] = $id;
+
+        try {
+            DB::query("UPDATE leads SET " . implode(', ', $set) . ", atualizado_em = NOW() WHERE id = ?", $params);
+
+            $userId = (int)(Auth::user()['id'] ?? 0) ?: null;
+            gravarHistorico($id, $userId, 'nota', 'Dados do contato editados');
+
+            echo json_encode(['ok' => true]);
+        } catch (Exception $e) {
+            error_log('CRM editar: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'erro' => 'Erro interno']);
+        }
+        break;
+
+    /* ── excluir ─────────────────────────────────────────────── */
+    case 'excluir':
+        $id = (int)($input['id'] ?? 0);
+        if (!$id) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'erro' => 'id obrigatório']);
+            exit;
+        }
+
+        try {
+            DB::query("DELETE FROM lead_historico WHERE lead_id = ?", [$id]);
+            DB::query("DELETE FROM lead_notas WHERE lead_id = ?", [$id]);
+            DB::query("DELETE FROM leads WHERE id = ?", [$id]);
+            echo json_encode(['ok' => true]);
+        } catch (Exception $e) {
+            error_log('CRM excluir: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'erro' => 'Erro interno']);
         }

@@ -103,9 +103,9 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O que o volume expõe', 'What volume exposes', 'Lo que el volumen expone') ?></span>
       <h2 class="reveal"><?= tx('Quando o volume cresce, pequenas rupturas viram grandes gargalos.', 'As volume grows, small breakdowns become big bottlenecks.', 'Cuando el volumen crece, pequeñas rupturas se convierten en grandes cuellos de botella.') ?></h2>
       <p class="reveal"><?= tx('Uma confirmação que não chega, um cadastro repetido, uma guia inconsistente ou um material sem rastreabilidade pode se multiplicar centenas de vezes ao longo do mês.', 'A confirmation that doesn\'t arrive, a duplicated registration, an inconsistent claim or an untraceable supply can multiply hundreds of times over a month.', 'Una confirmación que no llega, un registro repetido, una guía inconsistente o un material sin trazabilidad puede multiplicarse cientos de veces en el mes.') ?></p>
@@ -118,7 +118,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O fluxo conectado', 'The connected flow', 'El flujo conectado') ?></span>
@@ -132,7 +132,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow reveal"><?= tx('Recursos disponíveis', 'Available features', 'Recursos disponibles') ?></span>
@@ -146,7 +146,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint" id="cta">
+<section class="section band-dark" id="cta">
   <div class="wrap">
     <span class="eyebrow reveal"><?= tx('Mais pacientes não precisam significar mais caos', 'More patients doesn\'t have to mean more chaos', 'Más pacientes no tiene que significar más caos') ?></span>
     <h2 class="reveal"><?= tx('Cresça sem multiplicar controles manuais entre setores.', 'Grow without multiplying manual controls between departments.', 'Crezca sin multiplicar controles manuales entre sectores.') ?></h2>

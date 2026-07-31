@@ -66,13 +66,15 @@ $_faqs = [
 </section>
 
 <section class="section" style="padding-top:20px">
-  <div class="wrap" style="max-width:860px">
-    <?php foreach ($_faqs as $_i => [$_q, $_a]): ?>
-      <div class="faq-item reveal">
-        <button type="button" class="faq-q"><?= $_q ?><?= ic('plusMinus') ?></button>
-        <div class="faq-a"><p><?= $_a ?></p></div>
-      </div>
-    <?php endforeach; ?>
+  <div class="wrap">
+    <div style="max-width:820px">
+      <?php foreach ($_faqs as $_i => [$_q, $_a]): ?>
+        <div class="faq-item reveal">
+          <button type="button" class="faq-q"><?= $_q ?><?= ic('plusMinus') ?></button>
+          <div class="faq-a"><p><?= $_a ?></p></div>
+        </div>
+      <?php endforeach; ?>
+    </div>
   </div>
 </section>
 

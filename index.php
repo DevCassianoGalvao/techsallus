@@ -121,7 +121,7 @@ $_badges = ['Prontuário SOAP', 'TISS / TUSS', 'PACS / DICOM', 'HL7', 'HIS / LIS
 
 <section class="section" id="problemas">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O que está travando a operação', 'What\'s holding the operation back', 'Qué está frenando la operación') ?></span>
       <h2 class="reveal"><?= tx('Seu maior custo pode estar entre um setor e outro.', 'Your biggest cost may be sitting between departments.', 'Su mayor costo puede estar entre un sector y otro.') ?></h2>
       <p class="reveal"><?= tx('Quando a informação não acompanha o paciente, a equipe repete tarefas, a espera aumenta e o faturamento fica mais vulnerável.', 'When information does not follow the patient, staff repeat tasks, waiting time grows and billing becomes more vulnerable.', 'Cuando la información no acompaña al paciente, el equipo repite tareas, la espera aumenta y la facturación queda más vulnerable.') ?></p>
@@ -166,7 +166,7 @@ $_badges = ['Prontuário SOAP', 'TISS / TUSS', 'PACS / DICOM', 'HL7', 'HIS / LIS
 
 <section class="section tint" id="segmentos">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Para cada tipo de operação', 'For every type of operation', 'Para cada tipo de operación') ?></span>
       <h2 class="reveal"><?= tx('Uma solução para cada nível de complexidade.', 'A solution for every level of complexity.', 'Una solución para cada nivel de complejidad.') ?></h2>
       <p class="reveal"><?= tx('Comece pelo que sua instituição precisa agora e amplie o escopo sem montar um quebra-cabeça de sistemas e fornecedores.', 'Start with what your institution needs now and expand the scope without piecing together a puzzle of systems and vendors.', 'Comience por lo que su institución necesita ahora y amplíe el alcance sin armar un rompecabezas de sistemas y proveedores.') ?></p>
@@ -238,15 +238,17 @@ $_badges = ['Prontuário SOAP', 'TISS / TUSS', 'PACS / DICOM', 'HL7', 'HIS / LIS
 
 <section class="section band-dark" id="tech">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Tecnologia e integrações', 'Technology and integrations', 'Tecnología e integraciones') ?></span>
       <h2 class="reveal"><?= tx('Profundidade técnica sem complicar a rotina.', 'Technical depth without complicating the routine.', 'Profundidad técnica sin complicar la rutina.') ?></h2>
       <p class="reveal"><?= tx('Prontuário eletrônico, faturamento TISS/TUSS, PACS/DICOM, integrações HL7, infraestrutura em nuvem, backups e painéis de BI formam a base técnica da solução. Para a equipe, isso significa menos digitação duplicada, mais continuidade da informação e uma operação mais conectada.', 'Electronic medical records, TISS/TUSS billing, PACS/DICOM, HL7 integrations, cloud infrastructure, backups and BI dashboards form the technical base of the solution. For the team, this means less duplicate data entry, more continuity of information and a more connected operation.', 'Historia clínica electrónica, facturación TISS/TUSS, PACS/DICOM, integraciones HL7, infraestructura en la nube, copias de seguridad y paneles de BI forman la base técnica de la solución. Para el equipo, esto significa menos digitación duplicada, más continuidad de la información y una operación más conectada.') ?></p>
     </div>
-    <div class="badges">
+    <div class="badges" style="justify-content:center">
       <?php foreach ($_badges as $_b): ?><span class="badge-chip reveal"><?= $_b ?></span><?php endforeach; ?>
     </div>
-    <a href="/tecnologia" class="btn btn-dark reveal"><?= tx('Ver tecnologia e integrações', 'See technology and integrations', 'Ver tecnología e integraciones') ?></a>
+    <div style="text-align:center">
+      <a href="/tecnologia" class="btn btn-dark reveal"><?= tx('Ver tecnologia e integrações', 'See technology and integrations', 'Ver tecnología e integraciones') ?></a>
+    </div>
   </div>
 </section>
 

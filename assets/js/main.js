@@ -88,15 +88,20 @@
     });
   }
 
-  /* ── Contato: priority pills ─────────────────────────────────── */
+  /* ── Contato: priority pills (multi-select) ──────────────────── */
+  function syncPriorityInput() {
+    var input = document.getElementById('priorityValue');
+    if (!input) return;
+    var selected = Array.prototype.slice.call(document.querySelectorAll('.priority-pill.active'))
+      .map(function (p) { return p.dataset.value || p.textContent; });
+    input.value = selected.join(', ');
+  }
   function initPriorityPills() {
     var pills = document.querySelectorAll('.priority-pill');
-    var input = document.getElementById('priorityValue');
     pills.forEach(function (p) {
       p.addEventListener('click', function () {
-        pills.forEach(function (x) { x.classList.remove('active'); });
-        p.classList.add('active');
-        if (input) input.value = p.dataset.value || p.textContent;
+        p.classList.toggle('active');
+        syncPriorityInput();
         p.closest('.field').classList.remove('invalid');
       });
     });
@@ -105,8 +110,7 @@
     document.querySelectorAll('.priority-pill').forEach(function (p) {
       p.classList.toggle('active', (p.dataset.value || p.textContent) === value);
     });
-    var input = document.getElementById('priorityValue');
-    if (input) input.value = value;
+    syncPriorityInput();
     var form = document.getElementById('contactForm');
     if (form) form.scrollIntoView({ block: 'center' });
   };

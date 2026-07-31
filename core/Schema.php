@@ -19,7 +19,7 @@ class Schema
             'utm_term'         => "ALTER TABLE leads ADD COLUMN utm_term VARCHAR(150) DEFAULT NULL AFTER utm_campaign",
             'utm_content'      => "ALTER TABLE leads ADD COLUMN utm_content VARCHAR(150) DEFAULT NULL AFTER utm_term",
             'perfil_operacao'    => "ALTER TABLE leads ADD COLUMN perfil_operacao VARCHAR(50) DEFAULT NULL AFTER tipo_instituicao",
-            'principal_desafio'  => "ALTER TABLE leads ADD COLUMN principal_desafio VARCHAR(50) DEFAULT NULL AFTER perfil_operacao",
+            'principal_desafio'  => "ALTER TABLE leads ADD COLUMN principal_desafio VARCHAR(255) DEFAULT NULL AFTER perfil_operacao",
             'mensagem'           => "ALTER TABLE leads ADD COLUMN mensagem TEXT DEFAULT NULL AFTER principal_desafio",
         ] as $column => $sql) {
             $exists = DB::fetchOne(
@@ -34,6 +34,10 @@ class Schema
                 DB::query($sql);
             }
         }
+
+        // principal_desafio agora aceita multiplas selecoes (string separada por virgula) —
+        // amplia a coluna mesmo em bancos onde ela ja existia como VARCHAR(50).
+        DB::query("ALTER TABLE leads MODIFY principal_desafio VARCHAR(255) DEFAULT NULL");
 
         DB::query("ALTER TABLE leads MODIFY status ENUM('novo','contato','proposta','fechamento','arquivado') NOT NULL DEFAULT 'novo'");
 

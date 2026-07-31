@@ -80,9 +80,9 @@ $_journey = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('A margem escondida', 'The hidden margin', 'El margen escondido') ?></span>
       <h2 class="reveal"><?= tx('Faturamento não é margem.', 'Billing is not margin.', 'Facturación no es margen.') ?></h2>
       <p class="reveal"><?= tx('Uma especialidade pode crescer em produção e ainda consumir resultado. O Apure reúne as variáveis para mostrar o custo real da operação.', 'A specialty can grow in production and still consume results. Apure brings the variables together to show the real cost of the operation.', 'Una especialidad puede crecer en producción y aun así consumir resultado. Apure reúne las variables para mostrar el costo real de la operación.') ?></p>
@@ -95,7 +95,7 @@ $_journey = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O que forma o custo real', 'What forms the real cost', 'Lo que forma el costo real') ?></span>
@@ -109,7 +109,7 @@ $_journey = [
   </div>
 </section>
 
-<section class="section" id="como-funciona">
+<section class="section tint" id="como-funciona">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Como funciona', 'How it works', 'Cómo funciona') ?></span>
@@ -123,7 +123,7 @@ $_journey = [
   </div>
 </section>
 
-<section class="section tint" id="cta">
+<section class="section band-dark" id="cta">
   <div class="wrap">
     <span class="eyebrow reveal"><?= tx('Do dado operacional à decisão', 'From operational data to decision', 'Del dato operativo a la decisión') ?></span>
     <h2 class="reveal"><?= tx('Uma rotina de gestão com um resultado comum para todas as áreas.', 'A management routine with a shared result for every area.', 'Una rutina de gestión con un resultado común para todas las áreas.') ?></h2>

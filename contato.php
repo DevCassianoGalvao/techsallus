@@ -67,7 +67,8 @@ $_campaigns = [
 </section>
 
 <section class="section" style="padding-top:20px">
-  <div class="wrap" style="max-width:840px">
+  <div class="wrap">
+    <div style="max-width:820px">
     <div class="form-card reveal" id="form-card">
       <form id="contactForm" novalidate>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(Security::csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
@@ -105,7 +106,7 @@ $_campaigns = [
             <span class="err"><?= tx('Informe um e-mail válido.', 'Enter a valid email.', 'Indique un correo válido.') ?></span>
           </div>
           <div class="field full">
-            <label><?= t('form_desafio') ?> *</label>
+            <label><?= t('form_desafio') ?> * <span style="font-weight:400;color:var(--muted)">(<?= tx('pode escolher mais de um', 'you can pick more than one', 'puede elegir más de uno') ?>)</span></label>
             <input type="hidden" id="priorityValue" name="principal_desafio" required/>
             <div class="priority-pills">
               <?php foreach ($_desafios as $_d): ?>
@@ -140,6 +141,7 @@ $_campaigns = [
         <h3><?= t('form_success_title') ?></h3>
         <p style="color:var(--muted);margin-top:10px"><?= t('form_success_desc') ?></p>
       </div>
+    </div>
     </div>
   </div>
 </section>

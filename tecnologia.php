@@ -83,9 +83,9 @@ $_gloss = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Prontuário e informação clínica', 'Medical records and clinical information', 'Historia clínica e información clínica') ?></span>
       <h2 class="reveal"><?= tx('Registro clínico estruturado do início ao fim do cuidado.', 'Structured clinical record from start to finish of care.', 'Registro clínico estructurado del inicio al fin del cuidado.') ?></h2>
       <p class="reveal"><?= tx('O prontuário eletrônico orientado pelo método SOAP organiza relatos, achados, avaliação e plano de cuidado em uma estrutura clara. Dados clínicos, laudos, prescrições e evoluções permanecem vinculados à jornada do paciente.', 'The electronic medical record based on the SOAP method organizes subjective and objective findings, assessment and care plan in a clear structure. Clinical data, reports, prescriptions and progress notes stay linked to the patient\'s journey.', 'La historia clínica electrónica orientada por el método SOAP organiza relatos, hallazgos, evaluación y plan de cuidado en una estructura clara. Los datos clínicos, informes, prescripciones y evoluciones permanecen vinculados al recorrido del paciente.') ?></p>
@@ -102,7 +102,7 @@ $_gloss = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Interoperabilidade', 'Interoperability', 'Interoperabilidad') ?></span>
@@ -116,7 +116,7 @@ $_gloss = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('Infraestrutura', 'Infrastructure', 'Infraestructura') ?></span>
@@ -145,7 +145,7 @@ $_gloss = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap" style="max-width:820px">
     <span class="eyebrow reveal"><?= tx('Dados e BI', 'Data and BI', 'Datos y BI') ?></span>
     <h2 class="reveal" style="margin-top:18px;font-size:clamp(28px,3.2vw,38px)"><?= tx('Dados para acompanhar e aprofundar a gestão.', 'Data to track and deepen management.', 'Datos para acompañar y profundizar la gestión.') ?></h2>
@@ -153,7 +153,7 @@ $_gloss = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow reveal"><?= tx('Conteúdo complementar', 'Additional content', 'Contenido complementario') ?></span>

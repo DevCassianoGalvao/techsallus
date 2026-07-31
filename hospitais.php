@@ -111,9 +111,9 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('O custo de um dado parado', 'The cost of stalled data', 'El costo de un dato detenido') ?></span>
       <h2 class="reveal"><?= tx('No hospital, um dado parado em um setor vira atraso em outro.', 'In a hospital, data stuck in one department becomes a delay in another.', 'En el hospital, un dato detenido en un sector se convierte en atraso en otro.') ?></h2>
       <p class="reveal"><?= tx('Quando informações clínicas, leitos, prescrições, farmácia e faturamento não se conectam, surgem rupturas que afetam o paciente e o resultado.', 'When clinical information, beds, prescriptions, pharmacy and billing don\'t connect, breakdowns emerge that affect the patient and the results.', 'Cuando la información clínica, las camas, las prescripciones, la farmacia y la facturación no se conectan, surgen rupturas que afectan al paciente y al resultado.') ?></p>
@@ -126,7 +126,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="section-head center">
       <span class="eyebrow reveal"><?= tx('A jornada hospitalar', 'The hospital journey', 'El recorrido hospitalario') ?></span>
@@ -140,7 +140,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section">
+<section class="section tint">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow reveal"><?= tx('Recursos disponíveis', 'Available features', 'Recursos disponibles') ?></span>
@@ -154,7 +154,7 @@ $_resources = [
   </div>
 </section>
 
-<section class="section tint" id="cta">
+<section class="section band-dark" id="cta">
   <div class="wrap">
     <span class="eyebrow reveal"><?= tx('Pronto para integrar sua operação?', 'Ready to integrate your operation?', '¿Listo para integrar su operación?') ?></span>
     <h2 class="reveal"><?= tx('Conecte urgência, internação, farmácia e faturamento em uma visão única.', 'Connect urgency, admission, pharmacy and billing in a single view.', 'Conecte urgencia, internación, farmacia y facturación en una visión única.') ?></h2>

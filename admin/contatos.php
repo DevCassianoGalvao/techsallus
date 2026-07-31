@@ -149,6 +149,7 @@ include __DIR__ . '/_header.php';
           <th>Status</th>
           <th>UTM</th>
           <th>Data</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -175,12 +176,33 @@ include __DIR__ . '/_header.php';
               <?= htmlspecialchars(($c['utm_source'] ?: '-') . ' / ' . ($c['utm_campaign'] ?: '-')) ?>
             </td>
             <td style="font-size:12px;white-space:nowrap"><?= date('d/m/Y', strtotime($c['criado_em'])) ?></td>
+            <td class="td-actions">
+              <button type="button" class="btn-row-action btn-edit-contato" title="Editar"
+                      data-id="<?= (int)$c['id'] ?>"
+                      data-nome="<?= htmlspecialchars($c['nome'], ENT_QUOTES) ?>"
+                      data-cargo="<?= htmlspecialchars($c['cargo'] ?? '', ENT_QUOTES) ?>"
+                      data-tipo_instituicao="<?= htmlspecialchars($c['tipo_instituicao'] ?? '', ENT_QUOTES) ?>"
+                      data-instituicao="<?= htmlspecialchars($c['instituicao'] ?? '', ENT_QUOTES) ?>"
+                      data-perfil_operacao="<?= htmlspecialchars($c['perfil_operacao'] ?? '', ENT_QUOTES) ?>"
+                      data-principal_desafio="<?= htmlspecialchars($c['principal_desafio'] ?? '', ENT_QUOTES) ?>"
+                      data-email="<?= htmlspecialchars($c['email'] ?? '', ENT_QUOTES) ?>"
+                      data-whatsapp="<?= htmlspecialchars($c['whatsapp'] ?? '', ENT_QUOTES) ?>"
+                      data-porte="<?= htmlspecialchars($c['porte'] ?? '', ENT_QUOTES) ?>"
+                      data-cidade="<?= htmlspecialchars($c['cidade'] ?? '', ENT_QUOTES) ?>"
+                      data-estado="<?= htmlspecialchars($c['estado'] ?? '', ENT_QUOTES) ?>"
+                      data-mensagem="<?= htmlspecialchars($c['mensagem'] ?? '', ENT_QUOTES) ?>">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="btn-row-action danger btn-delete-contato" title="Excluir" data-id="<?= (int)$c['id'] ?>" data-nome="<?= htmlspecialchars($c['nome'], ENT_QUOTES) ?>">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </td>
           </tr>
         <?php endforeach; ?>
 
         <?php if (empty($contatos)): ?>
           <tr>
-            <td colspan="11" style="text-align:center;color:#94a3b8;padding:40px">Nenhum contato encontrado.</td>
+            <td colspan="12" style="text-align:center;color:#94a3b8;padding:40px">Nenhum contato encontrado.</td>
           </tr>
         <?php endif; ?>
       </tbody>
@@ -203,5 +225,116 @@ include __DIR__ . '/_header.php';
     </div>
   <?php endif; ?>
 </div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="edit-modal-title">Editar contato</div>
+        <div class="modal-sub">Altere os dados e salve.</div>
+      </div>
+      <button type="button" class="modal-close" id="edit-modal-close" aria-label="Fechar">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-contato-form">
+        <input type="hidden" id="edit-id" name="id">
+        <div class="edit-grid">
+          <div class="edit-field"><label>Nome</label><input type="text" id="edit-nome" name="nome"></div>
+          <div class="edit-field"><label>Cargo</label><input type="text" id="edit-cargo" name="cargo"></div>
+          <div class="edit-field"><label>Instituição</label><input type="text" id="edit-instituicao" name="instituicao"></div>
+          <div class="edit-field"><label>Tipo de instituição</label><input type="text" id="edit-tipo_instituicao" name="tipo_instituicao"></div>
+          <div class="edit-field"><label>Perfil da operação</label><input type="text" id="edit-perfil_operacao" name="perfil_operacao"></div>
+          <div class="edit-field"><label>Porte</label><input type="text" id="edit-porte" name="porte"></div>
+          <div class="edit-field"><label>E-mail</label><input type="email" id="edit-email" name="email"></div>
+          <div class="edit-field"><label>WhatsApp</label><input type="text" id="edit-whatsapp" name="whatsapp"></div>
+          <div class="edit-field"><label>Cidade</label><input type="text" id="edit-cidade" name="cidade"></div>
+          <div class="edit-field"><label>Estado (UF)</label><input type="text" id="edit-estado" name="estado" maxlength="2"></div>
+          <div class="edit-field full"><label>Principal desafio</label><input type="text" id="edit-principal_desafio" name="principal_desafio"></div>
+          <div class="edit-field full"><label>Mensagem</label><textarea id="edit-mensagem" name="mensagem"></textarea></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-modal-cancel" id="edit-modal-cancel">Cancelar</button>
+      <button type="button" class="btn-modal-save" id="edit-modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var editModal   = document.getElementById('edit-modal');
+  var editForm    = document.getElementById('edit-contato-form');
+  var editFields  = ['nome', 'cargo', 'instituicao', 'tipo_instituicao', 'perfil_operacao', 'porte', 'email', 'whatsapp', 'cidade', 'estado', 'principal_desafio', 'mensagem'];
+
+  function openEditModal(btn) {
+    document.getElementById('edit-id').value = btn.dataset.id;
+    editFields.forEach(function (f) {
+      var el = document.getElementById('edit-' + f);
+      if (el) el.value = btn.dataset[f] || '';
+    });
+    editModal.classList.add('open');
+  }
+  function closeEditModal() { editModal.classList.remove('open'); }
+
+  document.querySelectorAll('.btn-edit-contato').forEach(function (btn) {
+    btn.addEventListener('click', function () { openEditModal(btn); });
+  });
+  document.getElementById('edit-modal-close').addEventListener('click', closeEditModal);
+  document.getElementById('edit-modal-cancel').addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', function (e) { if (e.target === editModal) closeEditModal(); });
+
+  function postCrm(action, data) {
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    var payload = Object.assign({ action: action }, data);
+    return fetch('/api/crm.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf ? csrf.content : '' },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json(); });
+  }
+
+  document.getElementById('edit-modal-save').addEventListener('click', function () {
+    var saveBtn = this;
+    var data = { id: document.getElementById('edit-id').value };
+    editFields.forEach(function (f) {
+      var el = document.getElementById('edit-' + f);
+      if (el) data[f] = el.value;
+    });
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Salvando...';
+    postCrm('editar', data).then(function (res) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Salvar';
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert(res.erro || 'Erro ao salvar.');
+      }
+    }).catch(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Salvar';
+      alert('Erro ao salvar.');
+    });
+  });
+
+  document.querySelectorAll('.btn-delete-contato').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var nome = btn.dataset.nome || 'este contato';
+      if (!confirm('Excluir ' + nome + '? Essa ação não pode ser desfeita.')) return;
+      postCrm('excluir', { id: btn.dataset.id }).then(function (res) {
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert(res.erro || 'Erro ao excluir.');
+        }
+      }).catch(function () { alert('Erro ao excluir.'); });
+    });
+  });
+})();
+</script>
 
 <?php include __DIR__ . '/_footer.php'; ?>
