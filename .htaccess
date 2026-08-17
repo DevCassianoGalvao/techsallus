@@ -1,6 +1,9 @@
 # TechSallus — Apache configuration
 # Segurança + Roteamento + Cache + Compressão
 
+# ── Forçar charset UTF-8 (evita acentos quebrados tipo "Ã§Ã£o") ──
+AddDefaultCharset UTF-8
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
 

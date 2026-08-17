@@ -1,5 +1,7 @@
 <?php
 
+header('Content-Type: text/html; charset=UTF-8');
+
 $rootDir = __DIR__;
 require_once $rootDir . '/core/Env.php';
 Env::load($rootDir . '/.env');
