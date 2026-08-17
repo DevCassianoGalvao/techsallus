@@ -48,7 +48,7 @@ $_campaigns = [
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<link rel="stylesheet" href="/assets/css/main.css?v=20260731d"/>
+<link rel="stylesheet" href="/assets/css/main.css?v=20260731e"/>
 <?= getScripts('head') ?>
 </head>
 <body>
@@ -58,17 +58,19 @@ $_campaigns = [
 
 <main>
 
-<section class="subhero">
+<section class="subhero" style="padding-bottom:36px">
   <div class="wrap">
-    <span class="eyebrow reveal"><?= tx('Vamos começar pela sua prioridade', 'Let\'s start with your priority', 'Empecemos por su prioridad') ?></span>
-    <h1 class="reveal"><?= tx('Qual gargalo mais impacta sua operação hoje?', 'Which bottleneck impacts your operation most today?', '¿Qué cuello de botella impacta más su operación hoy?') ?></h1>
-    <p class="reveal"><?= tx('Conte um pouco sobre a instituição e escolha o desafio que mais pesa na rotina. A conversa começa por ele, não por uma lista de módulos.', 'Tell us a bit about your institution and choose the challenge that weighs most on your routine. The conversation starts there — not with a list of modules.', 'Cuéntenos un poco sobre la institución y elija el desafío que más pesa en la rutina. La conversación empieza por ahí, no por una lista de módulos.') ?></p>
+    <div style="max-width:760px;margin:0 auto;text-align:center">
+      <span class="eyebrow reveal"><?= tx('Vamos começar pela sua prioridade', 'Let\'s start with your priority', 'Empecemos por su prioridad') ?></span>
+      <h1 class="reveal"><?= tx('Qual gargalo mais impacta sua operação hoje?', 'Which bottleneck impacts your operation most today?', '¿Qué cuello de botella impacta más su operación hoy?') ?></h1>
+      <p class="reveal" style="margin-left:auto;margin-right:auto"><?= tx('Conte um pouco sobre a instituição e escolha o desafio que mais pesa na rotina. A conversa começa por ele, não por uma lista de módulos.', 'Tell us a bit about your institution and choose the challenge that weighs most on your routine. The conversation starts there — not with a list of modules.', 'Cuéntenos un poco sobre la institución y elija el desafío que más pesa en la rutina. La conversación empieza por ahí, no por una lista de módulos.') ?></p>
+    </div>
   </div>
 </section>
 
-<section class="section" style="padding-top:20px">
+<section class="section" style="padding-top:0">
   <div class="wrap">
-    <div style="max-width:820px">
+    <div style="max-width:820px;margin:0 auto">
     <div class="form-card reveal" id="form-card">
       <form id="contactForm" novalidate>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(Security::csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
@@ -163,6 +165,6 @@ $_campaigns = [
 </main>
 
 <?php include __DIR__ . '/_partials/footer.php'; ?>
-<script src="/assets/js/main.js?v=20260731d"></script>
+<script src="/assets/js/main.js?v=20260731e"></script>
 </body>
 </html>
