@@ -49,7 +49,7 @@ $_solLinks = [
         </div>
       </div>
       <button class="burger" id="burgerBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-      <a href="/contato" class="btn btn-primary<?= $_navPath === '/contato' ? ' active' : '' ?>"><span class="full"><?= t('nav_top_cta') ?></span></a>
+      <a href="https://suporte.portalsallus.com.br/" target="_blank" rel="noopener" class="btn btn-primary"><span class="full"><?= t('nav_top_cta') ?></span></a>
     </div>
   </div>
   <div class="mobile-panel" id="mobilePanel">
@@ -61,7 +61,7 @@ $_solLinks = [
     <?php foreach (array_slice($_topLinks, 1) as $_l): ?>
       <a href="<?= htmlspecialchars($_l['href']) ?>"><?= $_l['label'] ?></a>
     <?php endforeach; ?>
-    <a href="/contato"><?= t('nav_top_cta') ?></a>
+    <a href="https://suporte.portalsallus.com.br/" target="_blank" rel="noopener"><?= t('nav_top_cta') ?></a>
     <div class="mp-lang">
       <a href="/setlang.php?lang=pt"<?= $LANG === 'pt' ? ' class="lang-active"' : '' ?>><?= t('lang_pt') ?></a>
       <a href="/setlang.php?lang=en"<?= $LANG === 'en' ? ' class="lang-active"' : '' ?>><?= t('lang_en') ?></a>
