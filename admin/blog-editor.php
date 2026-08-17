@@ -143,7 +143,7 @@ include __DIR__ . '/_header.php';
 
     <div class="editor-field">
       <label class="editor-label" for="ed-slug">Slug (URL)</label>
-      <input class="editor-input" id="ed-slug" name="slug" type="text" required maxlength="250"
+      <input class="editor-input" id="ed-slug" name="slug" type="text" required maxlength="191"
              placeholder="meu-artigo-aqui"
              value="<?= htmlspecialchars($post['slug'] ?? ($_POST['slug'] ?? '')) ?>"/>
     </div>

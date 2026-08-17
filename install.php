@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             CREATE TABLE IF NOT EXISTS `posts` (
                 `id`            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 `titulo`        VARCHAR(250) NOT NULL,
-                `slug`          VARCHAR(250) NOT NULL UNIQUE,
+                `slug`          VARCHAR(191) NOT NULL UNIQUE,
                 `categoria_id`  INT UNSIGNED DEFAULT NULL,
                 `tags`          VARCHAR(500) DEFAULT NULL,
                 `resumo`        TEXT,
