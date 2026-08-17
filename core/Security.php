@@ -4,7 +4,7 @@ class Security
 {
     public static function basePath(): string
     {
-        $configured = getenv('BASE_PATH') ?: ($_SERVER['BASE_PATH'] ?? '');
+        $configured = $_ENV['BASE_PATH'] ?? getenv('BASE_PATH') ?: ($_SERVER['BASE_PATH'] ?? '');
         if ($configured !== '') {
             return rtrim('/' . trim((string)$configured, '/'), '/');
         }

@@ -33,7 +33,9 @@ class Env
             if (!array_key_exists($key, $_ENV)) {
                 $_ENV[$key]    = $value;
                 $_SERVER[$key] = $value;
-                putenv("{$key}={$value}");
+                if (function_exists('putenv')) {
+                    putenv("{$key}={$value}");
+                }
             }
         }
 
