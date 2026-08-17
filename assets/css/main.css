@@ -286,9 +286,10 @@ footer .wrap{position:relative;z-index:1}
 .grid-6,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
 .foot-top{grid-template-columns:1fr 1fr;gap:32px}
 .statement{padding:52px 28px}
-.hero-copy,.subhero .wrap>*{text-align:center}
+.hero-copy,.subhero .wrap{text-align:center}
 .hero-copy p,.subhero p{margin-left:auto;margin-right:auto}
-.hero-tag,.hero-ctas{justify-content:center}
+.hero-tag,.hero-ctas{justify-content:center;text-align:center}
+.hero-tag::before{display:none}
 }
 @media (max-width:480px){
 .wrap{padding:0 18px}
