@@ -239,7 +239,7 @@ function getScripts(string $pos): string {
 
 <?= getScripts('body') ?>
 <?= getScripts('footer') ?>
-<script src="/assets/js/main.js?v=20260731e"></script>
+<script src="/assets/js/main.js?v=20260731f"></script>
 <script src="/assets/js/blog.js"></script>
 </body>
 </html>
