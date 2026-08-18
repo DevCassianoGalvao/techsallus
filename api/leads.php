@@ -121,11 +121,6 @@ try {
     echo json_encode(['ok' => false, 'erro' => 'Erro interno. Tente novamente.']);
 }
 
-function debugBrevo(string $linha): void
-{
-    file_put_contents(dirname(__DIR__) . '/brevo-debug.log', date('Y-m-d H:i:s') . ' ' . $linha . "\n", FILE_APPEND);
-}
-
 function notificarBrevo(string $nome, string $inst, string $perfil, string $desafio, string $email, string $whatsapp, string $mensagem): void
 {
     $apiKey   = Env::get('BREVO_API_KEY');
@@ -135,23 +130,18 @@ function notificarBrevo(string $nome, string $inst, string $perfil, string $desa
 
     if (empty($apiKey)) {
         error_log('[Brevo] ABORTADO: BREVO_API_KEY nao configurada no .env');
-        debugBrevo('ABORTADO: BREVO_API_KEY nao configurada no .env');
         return;
     }
 
     if (empty($toEmail)) {
         error_log('[Brevo] ABORTADO: BREVO_TO_EMAIL nao configurado no .env');
-        debugBrevo('ABORTADO: BREVO_TO_EMAIL nao configurado no .env');
         return;
     }
 
     if (empty($fromEmail)) {
         error_log('[Brevo] ABORTADO: BREVO_FROM_EMAIL nao configurado no .env');
-        debugBrevo('ABORTADO: BREVO_FROM_EMAIL nao configurado no .env');
         return;
     }
-
-    debugBrevo("Enviando... apiKey=" . substr($apiKey, 0, 10) . '... from=' . $fromEmail . ' to=' . $toEmail);
 
     $nomeHtml     = htmlspecialchars($nome, ENT_QUOTES, 'UTF-8');
     $instHtml     = htmlspecialchars($inst, ENT_QUOTES, 'UTF-8');
@@ -214,14 +204,10 @@ function notificarBrevo(string $nome, string $inst, string $perfil, string $desa
 
     if ($curlErr) {
         error_log('[Brevo] cURL Erro: ' . $curlErr);
-        debugBrevo('cURL Erro: ' . $curlErr);
     }
 
     if ($httpCode !== 201) {
         error_log('[Brevo] FALHOU - Esperado 201, recebeu ' . $httpCode);
         error_log('[Brevo] Resposta: ' . $response);
-        debugBrevo("FALHOU - HTTP {$httpCode} - Resposta: {$response}");
-    } else {
-        debugBrevo('OK - HTTP 201, e-mail aceito pelo Brevo');
     }
 }
