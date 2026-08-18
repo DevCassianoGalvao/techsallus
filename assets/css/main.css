@@ -1,6 +1,6 @@
 :root{--navy:#094a86;--navy-dark:#07335e;--orange:#ff7300;--ink:#0d1f35;--muted:#54677e;--light:#eef4fb;--light2:#e4edf9;--line:#dbe6f3;--maxw:1240px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 body{background:#fff;color:var(--ink);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1,h2,h3,h4{font-family:'Bricolage Grotesque',sans-serif;color:var(--ink);line-height:1.08;letter-spacing:-.01em;text-wrap:pretty}
 img{max-width:100%;display:block}
@@ -295,4 +295,5 @@ footer .wrap{position:relative;z-index:1}
 .wrap{padding:0 18px}
 .hero-ctas{flex-direction:column;align-items:stretch}
 .hero-ctas .btn{justify-content:center}
+.btn{white-space:normal;text-align:center}
 }
