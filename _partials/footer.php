@@ -49,7 +49,7 @@ $rootDir = dirname(dirname(__DIR__));
 if (!class_exists('Settings') && file_exists($rootDir . '/core/Settings.php')) {
     require_once $rootDir . '/core/Settings.php';
 }
-$whatsappUrl = class_exists('Settings') ? Settings::whatsappUrl() : 'https://wa.me/557181299624?text=Ola%2C%20gostaria%20de%20mais%20informacoes%20sobre%20o%20sistema%20de%20voces';
+$whatsappUrl = class_exists('Settings') ? Settings::whatsappUrl() : 'https://wa.me/557181060274?text=Ola%2C%20gostaria%20de%20mais%20informacoes%20sobre%20o%20sistema%20de%20voces';
 ?>
 <a href="<?= htmlspecialchars($whatsappUrl) ?>"
    target="_blank"

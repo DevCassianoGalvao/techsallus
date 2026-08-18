@@ -48,8 +48,8 @@ class Settings
 
     public static function whatsappNumber(): string
     {
-        $number = preg_replace('/\D+/', '', self::get('whatsapp_numero', '557181299624'));
-        return $number ?: '557181299624';
+        $number = preg_replace('/\D+/', '', self::get('whatsapp_numero', '557181060274'));
+        return $number ?: '557181060274';
     }
 
     public static function whatsappMessage(): string

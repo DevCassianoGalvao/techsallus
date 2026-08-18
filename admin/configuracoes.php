@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$whatsappNumero = Settings::get('whatsapp_numero', '557181299624');
+$whatsappNumero = Settings::get('whatsapp_numero', '557181060274');
 $whatsappMensagem = Settings::get('whatsapp_mensagem', 'Ola, gostaria de mais informacoes sobre o sistema de voces');
 $scripts = [];
 $counts = [];
